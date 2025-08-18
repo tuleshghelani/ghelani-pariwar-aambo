@@ -90,8 +90,34 @@ export class PersonService {
                       ]
                     }
                   ]
+                },
+                {
+                  id: 'Person405',
+                  name: 'Person405',
+                  children: [
+                    {
+                      id: 'Person505',
+                      name: 'Person505',
+                      children: [
+                        { id: 'Person611', name: 'Person611' },
+                        { id: 'Person612', name: 'Person612' }
+                      ]
+                    },
+                    {
+                      id: 'Person506',
+                      name: 'Person506',
+                      children: [
+                        { id: 'Person613', name: 'Person613' },
+                        { id: 'Person614', name: 'Person614' }
+                      ]
+                    }
+                  ]
                 }
               ]
+            },
+            {
+              id: 'Person303',
+              name: 'Person303'
             }
           ]
         }

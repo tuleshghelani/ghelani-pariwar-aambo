@@ -19,6 +19,189 @@ describe('CanvasTreeComponent - Enhanced Layout Calculations', () => {
     expect(component).toBeTruthy();
   });
 
+  // ===== ERROR HANDLING TESTS =====
+
+  describe('Error Handling for Edge Cases', () => {
+    it('should handle null or undefined tree data gracefully', () => {
+      // Test with null data
+      component.personData = null;
+      expect(() => component['drawTree']()).not.toThrow();
+
+      // Test with undefined data
+      component.personData = undefined as any;
+      expect(() => component['drawTree']()).not.toThrow();
+    });
+
+    it('should validate malformed tree data', () => {
+      // Test with missing required properties
+      const malformedTree = {
+        id: '',
+        name: '',
+        children: []
+      } as Person;
+
+      expect(component['validateTreeData'](malformedTree)).toBeFalsy();
+
+      // Test with circular reference
+      const circularTree: Person = {
+        id: 'root',
+        name: 'Root',
+        children: []
+      };
+      circularTree.children = [circularTree]; // Circular reference
+
+      expect(component['validateTreeData'](circularTree)).toBeFalsy();
+    });
+
+    it('should handle extremely wide trees with fallback strategies', () => {
+      // Create an extremely wide tree (200+ nodes at one level)
+      const wideTree: Person = {
+        id: 'root',
+        name: 'Root',
+        children: []
+      };
+
+      // Add 250 children to exceed maxNodesPerLevel
+      for (let i = 0; i < 250; i++) {
+        wideTree.children!.push({
+          id: `child-${i}`,
+          name: `Child ${i}`,
+          children: []
+        });
+      }
+
+      // Should detect as invalid due to too many children
+      expect(component['validateTreeData'](wideTree)).toBeFalsy();
+    });
+
+    it('should handle invalid tree dimensions gracefully', () => {
+      const invalidDimensions = {
+        width: NaN,
+        height: Infinity,
+        levelWidths: new Map()
+      };
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 800;
+      canvas.height = 600;
+
+      expect(component['validateTreeDimensions'](invalidDimensions, canvas)).toBeFalsy();
+    });
+
+    it('should sanitize malformed tree data when possible', () => {
+      const malformedTree = {
+        id: null,
+        name: undefined,
+        children: [
+          {
+            id: 'child1',
+            name: 'Valid Child',
+            children: []
+          },
+          null, // Invalid child
+          {
+            id: 'child2',
+            name: 'Another Valid Child',
+            children: []
+          }
+        ]
+      } as any;
+
+      const sanitized = component['sanitizeTreeData'](malformedTree);
+      
+      expect(sanitized).toBeTruthy();
+      expect(sanitized!.id).toBeTruthy();
+      expect(sanitized!.name).toBeTruthy();
+      expect(sanitized!.children!.length).toBe(2); // Should filter out null child
+    });
+
+    it('should calculate emergency scale for oversized trees', () => {
+      const largeDimensions = {
+        width: 10000,
+        height: 8000
+      };
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 800;
+      canvas.height = 600;
+
+      const emergencyScale = component['calculateEmergencyScale'](largeDimensions, canvas);
+      
+      expect(emergencyScale).toBeGreaterThan(0);
+      expect(emergencyScale).toBeLessThan(1);
+      expect(emergencyScale).toBeGreaterThanOrEqual(component['emergencyFallbackScale']);
+    });
+
+    it('should handle layout calculation failures with recovery', () => {
+      // Mock a scenario that would cause layout calculation to fail
+      const invalidTree: Person = {
+        id: 'root',
+        name: 'Root',
+        children: []
+      };
+
+      // Spy on console.error to verify error handling
+      const consoleSpy = spyOn(console, 'error');
+
+      // Force an error by providing invalid parameters to adaptive spacing
+      expect(() => {
+        component['calculateEnhancedAdaptiveSpacing'](-1, -1, -1);
+      }).not.toThrow(); // Should not throw, should handle gracefully
+
+      // Should have logged an error
+      expect(consoleSpy).toHaveBeenCalled();
+    });
+
+    it('should reset error recovery state after successful render', () => {
+      // Set up error state
+      component['errorRecoveryAttempts'] = 2;
+      component['isInErrorRecovery'] = true;
+      component['lastErrorState'] = 'test error';
+
+      // Call reset method
+      component['resetErrorRecoveryState']();
+
+      expect(component['errorRecoveryAttempts']).toBe(0);
+      expect(component['isInErrorRecovery']).toBeFalsy();
+      expect(component['lastErrorState']).toBeNull();
+    });
+
+    it('should clear all caches during error recovery', () => {
+      // Set up some cached data
+      component['renderCache'].set('test', { x: 0, y: 0, width: 100 });
+      component['levelNodeCounts'].set(0, 5);
+      component['lastTreeHash'] = 'test-hash';
+
+      // Clear caches
+      component['clearAllCaches']();
+
+      expect(component['renderCache'].size).toBe(0);
+      expect(component['levelNodeCounts'].size).toBe(0);
+      expect(component['lastTreeHash']).toBe('');
+    });
+
+    it('should handle canvas dimension validation', () => {
+      const validCanvas = document.createElement('canvas');
+      validCanvas.width = 800;
+      validCanvas.height = 600;
+
+      const validDimensions = {
+        width: 1000,
+        height: 800,
+        levelWidths: new Map([[0, 200], [1, 400]])
+      };
+
+      expect(component['validateTreeDimensions'](validDimensions, validCanvas)).toBeTruthy();
+
+      // Test with oversized canvas
+      const oversizedCanvas = document.createElement('canvas');
+      oversizedCanvas.width = 50000; // Exceeds maxCanvasWidth
+      oversizedCanvas.height = 600;
+
+      expect(component['validateTreeDimensions'](validDimensions, oversizedCanvas)).toBeFalsy();
+    });
+  });
+
   it('should handle variable tree depths efficiently', () => {
     // Create a deep tree structure (7 levels)
     const deepTree: Person = {
