@@ -119,47 +119,121 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
       canvas.style.cursor = 'grab';
     }
     
-    // Enhanced mobile-first initialization
+    // Enhanced initialization with root level optimization
     const isMobile = window.innerWidth <= 768;
     
     // Add a small delay to ensure the canvas is properly sized before drawing
     setTimeout(() => {
-      // Draw the tree when data is available
+      // Draw the tree when data is available with root level optimization
       if (this.personData) {
-        // Apply mobile-optimized initial positioning
-        if (isMobile) {
-          this.optimizeMobileInitialView();
-        }
+        // Apply root-optimized initial positioning for all devices
+        this.applyRootOptimizedInitialView();
         this.drawTree();
+        
+        // Ensure root level prominence after initial draw
+        setTimeout(() => {
+          this.ensureRootLevelProminence();
+        }, 50);
       }
     }, isMobile ? 150 : 100); // Slightly longer delay for mobile to ensure proper initialization
   }
   
   /**
-   * Optimize initial view specifically for mobile devices
-   * Ensures the root level is prominently displayed and properly centered
+   * Apply root-optimized initial view for all device types
+   * Ensures the root level is prominently displayed and first 2-3 levels are clearly visible
    */
-  private optimizeMobileInitialView(): void {
-    if (!this.isBrowser || window.innerWidth > 768) return;
+  private applyRootOptimizedInitialView(): void {
+    if (!this.isBrowser) return;
     
     const canvas = this.canvasRef.nativeElement;
     const initialView = this.calculateInitialView();
     
-    // Apply mobile-optimized initial settings
+    // Apply root-optimized initial settings
     this.scale = initialView.scale;
     this.offsetX = initialView.offsetX;
     this.offsetY = initialView.offsetY;
     
-    // Additional mobile-specific adjustments
+    // Device-specific additional adjustments for root prominence
     const screenWidth = window.innerWidth;
+    const isMobile = screenWidth <= 768;
+    const isTablet = screenWidth > 768 && screenWidth <= 1024;
     
-    // For very small screens, ensure even better root visibility
-    if (screenWidth <= 480) {
-      this.offsetY = Math.max(this.offsetY, canvas.height * 0.01);
+    if (isMobile) {
+      // Mobile-specific root optimization
+      this.optimizeMobileRootDisplay(canvas, screenWidth);
+    } else if (isTablet) {
+      // Tablet-specific root optimization
+      this.optimizeTabletRootDisplay(canvas);
+    } else {
+      // Desktop-specific root optimization
+      this.optimizeDesktopRootDisplay(canvas);
     }
     
-    // Ensure the view is within mobile-friendly bounds
-    this.ensureMobileViewBounds();
+    // Ensure the view is within appropriate bounds for the device
+    if (isMobile) {
+      this.ensureMobileViewBounds();
+    }
+  }
+
+  /**
+   * Optimize root display specifically for mobile devices
+   * Ensures maximum root visibility and first level clarity on small screens
+   */
+  private optimizeMobileRootDisplay(canvas: HTMLCanvasElement, screenWidth: number): void {
+    // For very small screens, prioritize root visibility even more
+    if (screenWidth <= 480) {
+      // Adjust vertical position to show more content below root
+      this.offsetY = Math.max(this.offsetY * 0.8, canvas.height * 0.01);
+      
+      // Slightly reduce scale if needed to show more context
+      if (this.scale > 0.3) {
+        this.scale = Math.max(0.25, this.scale * 0.95);
+      }
+    } else if (screenWidth <= 600) {
+      // Medium mobile screens - balance root prominence with context
+      this.offsetY = Math.max(this.offsetY * 0.9, canvas.height * 0.02);
+    }
+    
+    // Ensure root is positioned for optimal thumb navigation
+    const thumbReachArea = canvas.width * 0.7; // Most users can reach 70% of screen width
+    if (this.offsetX > thumbReachArea) {
+      this.offsetX = Math.min(this.offsetX, thumbReachArea * 0.8);
+    }
+  }
+
+  /**
+   * Optimize root display for tablet devices
+   * Balances root prominence with showing first 2-3 levels clearly
+   */
+  private optimizeTabletRootDisplay(canvas: HTMLCanvasElement): void {
+    // Tablets can show more content, so optimize for showing first 2-3 levels
+    const isLandscape = window.innerWidth > window.innerHeight;
+    
+    if (isLandscape) {
+      // Landscape tablets - can show more horizontal content
+      this.offsetX = Math.max(this.offsetX, canvas.width * 0.1);
+      this.offsetY = Math.max(this.offsetY, canvas.height * 0.08);
+    } else {
+      // Portrait tablets - optimize for vertical content
+      this.offsetY = Math.max(this.offsetY * 0.9, canvas.height * 0.06);
+    }
+  }
+
+  /**
+   * Optimize root display for desktop devices
+   * Maximizes the visibility of first 2-3 levels while maintaining root prominence
+   */
+  private optimizeDesktopRootDisplay(canvas: HTMLCanvasElement): void {
+    // Desktop has the most screen real estate, so optimize for showing tree structure
+    
+    // Ensure root is positioned to show maximum tree context
+    this.offsetX = Math.max(this.offsetX, canvas.width * 0.08);
+    this.offsetY = Math.max(this.offsetY, canvas.height * 0.1);
+    
+    // Desktop can handle slightly larger scale for better readability
+    if (this.scale < 0.6) {
+      this.scale = Math.min(0.85, this.scale * 1.1);
+    }
   }
   
   // Zoom control methods
@@ -460,10 +534,10 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
   }
   
   /**
-   * Calculate device-specific initial view settings with enhanced mobile positioning
+   * Calculate device-specific initial view settings with enhanced root level optimization
    * Determines optimal scale and positioning for mobile (≤768px), tablet (769-1024px), and desktop
-   * Includes better initial positioning when component first loads on mobile
-   * @returns Object containing scale, offsetX, and offsetY values
+   * Ensures root level is prominently displayed and first 2-3 levels are clearly visible
+   * @returns Object containing scale, offsetX, and offsetY values optimized for root level display
    */
   private calculateInitialView(): { scale: number, offsetX: number, offsetY: number } {
     if (!this.isBrowser) {
@@ -476,46 +550,439 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
 
-    // Enhanced device-specific initial scale and positioning logic
+    // Calculate optimal initial view based on tree structure for root prominence
+    const initialViewConfig = this.calculateOptimalInitialViewForRootDisplay();
+
+    // Enhanced device-specific initial scale and positioning logic with root level optimization
     if (screenWidth <= 768) {
-      // Mobile devices (≤768px): Enhanced mobile-first positioning
+      // Mobile devices (≤768px): Root-optimized mobile positioning
       const isPortrait = screenHeight > screenWidth;
       
-      // Adjust scale based on orientation and screen size
-      let mobileScale = 0.35;
+      // Adjust scale to ensure root and first 2-3 levels are clearly visible
+      let mobileScale = initialViewConfig.mobileScale;
       if (screenWidth <= 480) {
-        // Very small mobile screens
-        mobileScale = 0.25;
+        // Very small mobile screens - prioritize root visibility
+        mobileScale = Math.max(0.25, initialViewConfig.mobileScale * 0.8);
       } else if (screenWidth <= 600) {
-        // Medium mobile screens
-        mobileScale = 0.3;
+        // Medium mobile screens - balance root and level visibility
+        mobileScale = Math.max(0.3, initialViewConfig.mobileScale * 0.9);
       }
       
-      // Enhanced positioning for mobile - ensure root is prominently displayed
-      const offsetXFactor = isPortrait ? 0.05 : 0.08;
-      const offsetYFactor = isPortrait ? 0.02 : 0.05;
+      // Root-centered positioning for mobile - ensure root node is prominently displayed
+      const rootCenteredOffsetX = this.calculateRootCenteredOffsetX(canvasWidth, mobileScale);
+      const rootCenteredOffsetY = this.calculateRootCenteredOffsetY(canvasHeight, mobileScale, true);
       
       return {
         scale: mobileScale,
-        offsetX: canvasWidth * offsetXFactor,
-        offsetY: canvasHeight * offsetYFactor
+        offsetX: rootCenteredOffsetX,
+        offsetY: rootCenteredOffsetY
       };
     } else if (screenWidth > 768 && screenWidth <= 1024) {
-      // Tablet devices (769-1024px): Improved tablet positioning
+      // Tablet devices (769-1024px): Root-optimized tablet positioning
       const isLandscape = screenWidth > screenHeight;
       
+      // Scale to show root and first 2-3 levels clearly on tablet
+      const tabletScale = isLandscape ? 
+        Math.max(0.5, initialViewConfig.tabletScale) : 
+        Math.max(0.45, initialViewConfig.tabletScale * 0.9);
+      
+      // Root-centered positioning for tablet
+      const rootCenteredOffsetX = this.calculateRootCenteredOffsetX(canvasWidth, tabletScale);
+      const rootCenteredOffsetY = this.calculateRootCenteredOffsetY(canvasHeight, tabletScale, false);
+      
       return {
-        scale: isLandscape ? 0.65 : 0.55,
-        offsetX: canvasWidth * (isLandscape ? 0.18 : 0.12),
-        offsetY: canvasHeight * (isLandscape ? 0.12 : 0.08)
+        scale: tabletScale,
+        offsetX: rootCenteredOffsetX,
+        offsetY: rootCenteredOffsetY
       };
     } else {
-      // Desktop devices (>1024px): Optimized desktop positioning
+      // Desktop devices (>1024px): Root-optimized desktop positioning
+      const desktopScale = Math.max(0.6, initialViewConfig.desktopScale);
+      
+      // Root-centered positioning for desktop - show first 2-3 levels clearly
+      const rootCenteredOffsetX = this.calculateRootCenteredOffsetX(canvasWidth, desktopScale);
+      const rootCenteredOffsetY = this.calculateRootCenteredOffsetY(canvasHeight, desktopScale, false);
+      
       return {
-        scale: 0.8,
-        offsetX: canvasWidth * 0.2,
-        offsetY: canvasHeight * 0.15
+        scale: desktopScale,
+        offsetX: rootCenteredOffsetX,
+        offsetY: rootCenteredOffsetY
       };
+    }
+  }
+
+  /**
+   * Calculate optimal initial view configuration for root level display
+   * Analyzes tree structure to determine best scale and positioning for root prominence
+   * @returns Configuration object with device-specific scale recommendations
+   */
+  private calculateOptimalInitialViewForRootDisplay(): {
+    mobileScale: number;
+    tabletScale: number;
+    desktopScale: number;
+    recommendedLevelsToShow: number;
+  } {
+    if (!this.personData) {
+      return {
+        mobileScale: 0.35,
+        tabletScale: 0.6,
+        desktopScale: 0.8,
+        recommendedLevelsToShow: 3
+      };
+    }
+
+    // Analyze tree structure to optimize initial view
+    const treeAnalysis = this.analyzeTreeStructureForInitialView(this.personData);
+    
+    // Calculate optimal scales based on tree characteristics
+    let mobileScale = 0.35;
+    let tabletScale = 0.6;
+    let desktopScale = 0.8;
+    let recommendedLevelsToShow = 3;
+
+    // Adjust scales based on tree depth and width
+    if (treeAnalysis.maxDepth <= 3) {
+      // Shallow trees - can use larger scale to show all levels
+      mobileScale = 0.45;
+      tabletScale = 0.7;
+      desktopScale = 0.9;
+      recommendedLevelsToShow = treeAnalysis.maxDepth;
+    } else if (treeAnalysis.maxDepth <= 5) {
+      // Medium depth trees - optimize for first 3 levels
+      mobileScale = 0.4;
+      tabletScale = 0.65;
+      desktopScale = 0.85;
+      recommendedLevelsToShow = 3;
+    } else if (treeAnalysis.maxDepth <= 8) {
+      // Deep trees - focus on root and first 2 levels
+      mobileScale = 0.35;
+      tabletScale = 0.6;
+      desktopScale = 0.8;
+      recommendedLevelsToShow = 2;
+    } else {
+      // Very deep trees - prioritize root visibility
+      mobileScale = 0.3;
+      tabletScale = 0.55;
+      desktopScale = 0.75;
+      recommendedLevelsToShow = 2;
+    }
+
+    // Adjust for tree width at first few levels
+    if (treeAnalysis.maxWidthInFirstThreeLevels > 8) {
+      // Very wide trees - reduce scale to fit more content
+      mobileScale *= 0.85;
+      tabletScale *= 0.9;
+      desktopScale *= 0.95;
+    } else if (treeAnalysis.maxWidthInFirstThreeLevels <= 3) {
+      // Narrow trees - can use larger scale
+      mobileScale *= 1.1;
+      tabletScale *= 1.05;
+      desktopScale *= 1.02;
+    }
+
+    return {
+      mobileScale: Math.max(0.2, Math.min(0.6, mobileScale)),
+      tabletScale: Math.max(0.4, Math.min(0.8, tabletScale)),
+      desktopScale: Math.max(0.5, Math.min(1.0, desktopScale)),
+      recommendedLevelsToShow
+    };
+  }
+
+  /**
+   * Analyze tree structure to inform initial view optimization
+   * Examines tree depth, width, and distribution for optimal root display
+   * @param person - Root person node
+   * @returns Analysis results for initial view optimization
+   */
+  private analyzeTreeStructureForInitialView(person: Person): {
+    maxDepth: number;
+    maxWidthInFirstThreeLevels: number;
+    totalNodesInFirstThreeLevels: number;
+    rootHasChildren: boolean;
+  } {
+    let maxDepth = 0;
+    let maxWidthInFirstThreeLevels = 0;
+    let totalNodesInFirstThreeLevels = 0;
+    const levelCounts = new Map<number, number>();
+
+    const traverse = (node: Person, level: number): void => {
+      maxDepth = Math.max(maxDepth, level);
+      
+      if (!levelCounts.has(level)) {
+        levelCounts.set(level, 0);
+      }
+      levelCounts.set(level, levelCounts.get(level)! + 1);
+
+      // Track nodes in first three levels for width analysis
+      if (level <= 2) {
+        totalNodesInFirstThreeLevels++;
+        maxWidthInFirstThreeLevels = Math.max(
+          maxWidthInFirstThreeLevels, 
+          levelCounts.get(level)!
+        );
+      }
+
+      if (node.children) {
+        node.children.forEach(child => traverse(child, level + 1));
+      }
+    };
+
+    traverse(person, 0);
+
+    return {
+      maxDepth,
+      maxWidthInFirstThreeLevels,
+      totalNodesInFirstThreeLevels,
+      rootHasChildren: !!(person.children && person.children.length > 0)
+    };
+  }
+
+  /**
+   * Calculate root-centered horizontal offset for optimal root display
+   * Ensures root node is prominently positioned and first levels are visible
+   * @param canvasWidth - Canvas width in pixels
+   * @param scale - Current scale factor
+   * @returns Optimal horizontal offset for root centering
+   */
+  private calculateRootCenteredOffsetX(canvasWidth: number, scale: number): number {
+    if (!this.personData) {
+      return canvasWidth * 0.1;
+    }
+
+    // Calculate approximate tree width for first few levels
+    const treeAnalysis = this.analyzeTreeStructureForInitialView(this.personData);
+    const estimatedTreeWidth = this.estimateTreeWidthForFirstLevels(treeAnalysis);
+    
+    // Calculate offset to center the root and show first levels optimally
+    const scaledTreeWidth = estimatedTreeWidth * scale;
+    const availableWidth = canvasWidth;
+    
+    // Center the tree with slight left bias to show more of the right side
+    let centeredOffsetX = (availableWidth - scaledTreeWidth) / 2;
+    
+    // Adjust for better root prominence
+    const rootProminenceAdjustment = canvasWidth * 0.05;
+    centeredOffsetX += rootProminenceAdjustment;
+    
+    // Ensure minimum margin from canvas edge
+    const minMargin = canvasWidth * 0.02;
+    const maxMargin = canvasWidth * 0.4;
+    
+    return Math.max(minMargin, Math.min(maxMargin, centeredOffsetX));
+  }
+
+  /**
+   * Calculate root-centered vertical offset for optimal root display
+   * Positions root node to show first 2-3 levels clearly
+   * @param canvasHeight - Canvas height in pixels
+   * @param scale - Current scale factor
+   * @param isMobile - Whether this is a mobile device
+   * @returns Optimal vertical offset for root centering
+   */
+  private calculateRootCenteredOffsetY(canvasHeight: number, scale: number, isMobile: boolean): number {
+    if (!this.personData) {
+      return canvasHeight * 0.1;
+    }
+
+    // Calculate approximate height needed for first 2-3 levels
+    const treeAnalysis = this.analyzeTreeStructureForInitialView(this.personData);
+    const levelsToShow = Math.min(3, treeAnalysis.maxDepth + 1);
+    
+    // Estimate height for the levels we want to show
+    const nodeHeight = this.nodeHeight;
+    const verticalSpacing = this.calculateVerticalSpacingForDepth(treeAnalysis.maxDepth);
+    const estimatedHeightForLevels = levelsToShow * (nodeHeight + verticalSpacing);
+    
+    // Calculate offset to position root optimally
+    const scaledHeight = estimatedHeightForLevels * scale;
+    const availableHeight = canvasHeight;
+    
+    // Position root in upper portion to show more levels below
+    let rootOffsetY: number;
+    
+    if (isMobile) {
+      // Mobile: Position root higher to maximize visible levels
+      rootOffsetY = availableHeight * 0.05;
+    } else {
+      // Desktop/Tablet: Balance root prominence with level visibility
+      rootOffsetY = Math.max(
+        availableHeight * 0.08,
+        (availableHeight - scaledHeight) * 0.25
+      );
+    }
+    
+    // Ensure reasonable bounds
+    const minOffsetY = availableHeight * 0.02;
+    const maxOffsetY = availableHeight * 0.3;
+    
+    return Math.max(minOffsetY, Math.min(maxOffsetY, rootOffsetY));
+  }
+
+  /**
+   * Estimate tree width for first few levels to optimize initial positioning
+   * @param treeAnalysis - Tree structure analysis results
+   * @returns Estimated width needed for first levels
+   */
+  private estimateTreeWidthForFirstLevels(treeAnalysis: {
+    maxDepth: number;
+    maxWidthInFirstThreeLevels: number;
+    totalNodesInFirstThreeLevels: number;
+    rootHasChildren: boolean;
+  }): number {
+    // Use the maximum width in first three levels as base
+    const maxNodesInLevel = treeAnalysis.maxWidthInFirstThreeLevels;
+    
+    // Estimate spacing (use average between min and max)
+    const estimatedSpacing = (this.minHorizontalSpacing + this.maxHorizontalSpacing) / 2;
+    
+    // Calculate estimated width
+    const estimatedWidth = maxNodesInLevel * this.nodeWidth + 
+                          (maxNodesInLevel - 1) * estimatedSpacing;
+    
+    // Add some buffer for connection lines and margins
+    const buffer = this.nodeWidth * 0.5;
+    
+    return estimatedWidth + buffer;
+  }
+
+  /**
+   * Calculate optimal root start position for prominent root display
+   * Ensures root node is centered and first 2-3 levels are clearly visible
+   * @param canvas - Canvas element
+   * @param treeDimensions - Calculated tree dimensions
+   * @returns Optimal X position for root node start
+   */
+  private calculateOptimalRootStartPosition(
+    canvas: HTMLCanvasElement, 
+    treeDimensions: { width: number, height: number, levelWidths: Map<number, number> }
+  ): number {
+    const isMobile = window.innerWidth <= 768;
+    const canvasWidth = canvas.width;
+    const scaledCanvasWidth = canvasWidth / this.scale;
+    
+    // Calculate base centered position
+    let startX = (scaledCanvasWidth - treeDimensions.width) / 2;
+    
+    // Apply device-specific adjustments for root prominence
+    if (isMobile) {
+      // Mobile: Ensure root is visible with slight left bias for better navigation
+      const mobileAdjustment = Math.min(50, scaledCanvasWidth * 0.08);
+      startX = Math.max(mobileAdjustment, startX);
+      
+      // Ensure we don't push content too far right on small screens
+      const maxStartX = scaledCanvasWidth * 0.15;
+      startX = Math.min(startX, maxStartX);
+    } else {
+      // Desktop/Tablet: Center with slight adjustment for optimal viewing
+      const desktopAdjustment = scaledCanvasWidth * 0.02;
+      startX += desktopAdjustment;
+      
+      // Ensure reasonable bounds
+      const minStartX = scaledCanvasWidth * 0.05;
+      const maxStartX = scaledCanvasWidth * 0.25;
+      startX = Math.max(minStartX, Math.min(maxStartX, startX));
+    }
+    
+    return startX;
+  }
+
+  /**
+   * Check if root level is not prominently displayed in current view
+   * Determines if the current view needs adjustment to show root better
+   * @returns True if root is not prominently displayed
+   */
+  private isRootNotProminentlyDisplayed(): boolean {
+    if (!this.personData || !this.isBrowser) {
+      return false;
+    }
+
+    const canvas = this.canvasRef.nativeElement;
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+
+    // Calculate where the root node would be positioned in current view
+    const treeDimensions = this.calculateTreeDimensionsWithAdaptiveSpacing(this.personData);
+    const rootStartX = this.calculateOptimalRootStartPosition(canvas, treeDimensions);
+    
+    // Transform to screen coordinates
+    const screenRootX = rootStartX * this.scale + this.offsetX;
+    const screenRootY = 50 * this.scale + this.offsetY; // Root Y position
+    
+    // Check if root is prominently visible
+    const rootNodeScreenWidth = this.nodeWidth * this.scale;
+    const rootNodeScreenHeight = this.nodeHeight * this.scale;
+    
+    // Root should be well within the visible area
+    const isRootVisible = screenRootX >= 0 && 
+                         screenRootX + rootNodeScreenWidth <= canvasWidth &&
+                         screenRootY >= 0 && 
+                         screenRootY + rootNodeScreenHeight <= canvasHeight;
+    
+    // Root should be in the upper portion of the screen for prominence
+    const isRootInUpperPortion = screenRootY <= canvasHeight * 0.4;
+    
+    // Root should be reasonably centered horizontally
+    const rootCenterX = screenRootX + rootNodeScreenWidth / 2;
+    const isRootReasonablyCentered = rootCenterX >= canvasWidth * 0.1 && 
+                                    rootCenterX <= canvasWidth * 0.9;
+    
+    // Check if scale is appropriate for showing first 2-3 levels
+    const isScaleAppropriate = this.scale >= 0.2 && this.scale <= 1.2;
+    
+    return !(isRootVisible && isRootInUpperPortion && isRootReasonablyCentered && isScaleAppropriate);
+  }
+
+  /**
+   * Ensure root level prominence is maintained
+   * Adjusts view if root is not prominently displayed
+   */
+  private ensureRootLevelProminence(): void {
+    if (!this.isBrowser || !this.personData) {
+      return;
+    }
+
+    // Check if root is prominently displayed
+    if (this.isRootNotProminentlyDisplayed()) {
+      // Reset to optimal initial view for root prominence
+      const initialView = this.calculateInitialView();
+      
+      // Smoothly transition to new view (optional - can be instant)
+      const transitionDuration = 300; // ms
+      const startTime = Date.now();
+      const startScale = this.scale;
+      const startOffsetX = this.offsetX;
+      const startOffsetY = this.offsetY;
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / transitionDuration, 1);
+        
+        // Use easing function for smooth transition
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        
+        this.scale = startScale + (initialView.scale - startScale) * easeProgress;
+        this.offsetX = startOffsetX + (initialView.offsetX - startOffsetX) * easeProgress;
+        this.offsetY = startOffsetY + (initialView.offsetY - startOffsetY) * easeProgress;
+        
+        this.drawTree();
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+      
+      // Start animation or apply immediately for mobile (better performance)
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        // Instant transition for mobile to avoid performance issues
+        this.scale = initialView.scale;
+        this.offsetX = initialView.offsetX;
+        this.offsetY = initialView.offsetY;
+        this.drawTree();
+      } else {
+        // Smooth transition for desktop/tablet
+        requestAnimationFrame(animate);
+      }
     }
   }
 
@@ -534,7 +1001,7 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
         this.clearRenderCache();
       }
       
-      // Enhanced initial positioning logic with better mobile support
+      // Enhanced initial positioning logic with root level optimization
       const initialView = this.calculateInitialView();
       
       // Check if this is initial load or significant resize that requires repositioning
@@ -542,14 +1009,17 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
                            Math.abs(this.offsetX) < 10 && 
                            Math.abs(this.offsetY) < 10;
       
-      // For mobile devices, also reset view on orientation changes
+      // For mobile devices, also reset view on orientation changes to maintain root prominence
       const isMobile = window.innerWidth <= 768;
       const orientationChanged = isMobile && (
         (window.innerWidth > window.innerHeight && this.scale < 0.4) ||
         (window.innerHeight > window.innerWidth && this.scale > 0.6)
       );
       
-      if (isInitialLoad || orientationChanged) {
+      // Also reset view if the current view doesn't show the root prominently
+      const rootNotProminent = this.isRootNotProminentlyDisplayed();
+      
+      if (isInitialLoad || orientationChanged || rootNotProminent) {
         this.scale = initialView.scale;
         this.offsetX = initialView.offsetX;
         this.offsetY = initialView.offsetY;
@@ -558,6 +1028,9 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
         if (isMobile) {
           setTimeout(() => this.ensureMobileViewBounds(), 100);
         }
+        
+        // Ensure root level prominence is maintained after resize
+        setTimeout(() => this.ensureRootLevelProminence(), 150);
       }
     }
   }
@@ -834,19 +1307,21 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
     // Performance optimization: Clear render cache if tree structure changed
     if (treeStructureChanged) {
       this.renderCache.clear();
+      // Reset layout configuration for fresh adaptive spacing calculations
+      this.layoutConfig.levelBasedSpacing.clear();
     }
     
     // Save current state
     this.ctx.save();
     
-    // Apply transformations
+    // Apply transformations - ensuring proper integration with existing zoom and pan functionality
     this.ctx.translate(this.offsetX, this.offsetY);
     this.ctx.scale(this.scale, this.scale);
     
-    // Calculate tree dimensions
-    const treeDimensions = this.calculateTreeDimensions(this.personData);
+    // Calculate tree dimensions using enhanced adaptive spacing algorithms in main rendering pipeline
+    const treeDimensions = this.calculateTreeDimensionsWithAdaptiveSpacing(this.personData);
     
-    // Enhanced mobile-aware tree centering
+    // Enhanced mobile-aware tree centering with adaptive spacing considerations
     let startX = (canvas.width / this.scale - treeDimensions.width) / 2;
     
     // For mobile devices, adjust horizontal positioning to ensure root visibility
@@ -855,7 +1330,7 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
       startX = Math.max(mobileAdjustment, startX);
     }
     
-    // Apply initial view settings if this is the first draw
+    // Apply optimized initial view settings for root level prominence
     const isInitialDraw = Math.abs(this.offsetX) < 10 && Math.abs(this.offsetY) < 10 && Math.abs(this.scale - 1) < 0.1;
     if (isInitialDraw) {
       const initialView = this.calculateInitialView();
@@ -863,18 +1338,15 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
       this.offsetX = initialView.offsetX;
       this.offsetY = initialView.offsetY;
       
-      // Reapply transformations with new values
+      // Reapply transformations with optimized values for root display
       this.ctx.restore();
       this.ctx.save();
       this.ctx.translate(this.offsetX, this.offsetY);
       this.ctx.scale(this.scale, this.scale);
       
-      // Recalculate startX with new scale
-      startX = (canvas.width / this.scale - treeDimensions.width) / 2;
-      if (isMobile) {
-        const mobileAdjustment = Math.min(50, canvas.width / this.scale * 0.05);
-        startX = Math.max(mobileAdjustment, startX);
-      }
+      // Recalculate startX with root-optimized positioning
+      const recalculatedDimensions = this.calculateTreeDimensionsWithAdaptiveSpacing(this.personData);
+      startX = this.calculateOptimalRootStartPosition(canvas, recalculatedDimensions);
     }
     
     // Mobile-specific rendering optimizations
@@ -883,10 +1355,11 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
       this.ctx.imageSmoothingEnabled = this.scale > 0.5;
     }
     
-    // Draw from root node and collect bounding boxes
-    this.drawNode(this.personData, startX, 50, 0, treeDimensions);
+    // Draw from root node using enhanced layout algorithms with integrated adaptive spacing
+    // This ensures the main rendering pipeline uses the new adaptive spacing calculations
+    this.drawNodeWithAdaptiveLayout(this.personData, startX, 50, 0, treeDimensions);
     
-    // Perform overlap detection after initial rendering
+    // Perform overlap detection after initial rendering using enhanced algorithms
     const overlaps = this.detectNodeOverlaps(this.nodeBoundingBoxes);
     
     // If overlaps are detected, adjust positioning and redraw if necessary
@@ -894,7 +1367,7 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
       const adjustmentResult = this.adjustPositioningForOverlaps(overlaps, treeDimensions);
       
       if (adjustmentResult.repositionRequired || adjustmentResult.adjustedSpacing.size > 0) {
-        // Update layout configuration with adjusted spacing
+        // Update layout configuration with adjusted spacing from enhanced algorithms
         adjustmentResult.adjustedSpacing.forEach((spacing, level) => {
           this.layoutConfig.levelBasedSpacing.set(level, spacing);
         });
@@ -904,21 +1377,25 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
           this.ctx.clearRect(0, 0, canvas.width / this.scale, canvas.height / this.scale);
           this.clearNodeBoundingBoxes();
           
-          // Recalculate tree dimensions with new spacing
-          const adjustedTreeDimensions = this.calculateTreeDimensions(this.personData);
+          // Recalculate tree dimensions with updated adaptive spacing algorithms
+          const adjustedTreeDimensions = this.calculateTreeDimensionsWithAdaptiveSpacing(this.personData);
           
-          // Recalculate start position
+          // Recalculate start position with enhanced adaptive spacing
           let adjustedStartX = (canvas.width / this.scale - adjustedTreeDimensions.width) / 2;
           if (isMobile) {
             const mobileAdjustment = Math.min(50, canvas.width / this.scale * 0.05);
             adjustedStartX = Math.max(mobileAdjustment, adjustedStartX);
           }
           
-          // Redraw with adjusted positioning
-          this.drawNode(this.personData, adjustedStartX, 50, 0, adjustedTreeDimensions);
+          // Redraw using enhanced adaptive layout algorithms in main rendering pipeline
+          this.drawNodeWithAdaptiveLayout(this.personData, adjustedStartX, 50, 0, adjustedTreeDimensions);
         }
       }
     }
+    
+    // Transformations are properly maintained for seamless zoom and pan functionality
+    // The adaptive spacing calculations work within the existing transformation matrix
+    // ensuring smooth interaction with zoom/pan operations
     
     // Restore state
     this.ctx.restore();
@@ -968,6 +1445,85 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
     levelCounts.forEach((count, level) => {
       // Use enhanced adaptive spacing for variable tree depths
       const adaptiveSpacing = this.calculateEnhancedAdaptiveSpacing(level, count, levelCounts.size);
+      
+      // Calculate level width with enhanced spacing to handle deeper trees efficiently
+      const levelWidth = count * this.nodeWidth + (count - 1) * adaptiveSpacing;
+      
+      // Apply level-specific adjustments for deeper trees (4-10+ levels)
+      const depthAdjustedWidth = this.applyDepthSpecificAdjustments(levelWidth, level, levelCounts.size);
+      
+      // Ensure minimum spacing requirements are met to prevent overlapping
+      const minRequiredWidth = count * this.nodeWidth + (count - 1) * this.minHorizontalSpacing;
+      const finalLevelWidth = Math.max(depthAdjustedWidth, minRequiredWidth);
+      
+      levelWidths.set(level, finalLevelWidth);
+      maxWidth = Math.max(maxWidth, finalLevelWidth);
+      maxLevel = Math.max(maxLevel, level);
+    });
+    
+    // Apply vertical spacing adjustments for deeper trees
+    const adjustedVerticalSpacing = this.calculateVerticalSpacingForDepth(levelCounts.size);
+    const height = (maxLevel + 1) * (this.nodeHeight + adjustedVerticalSpacing);
+    
+    // Cache results for performance
+    this.lastTreeHash = treeHash;
+    
+    return { width: maxWidth, height, levelWidths };
+  }
+
+  /**
+   * Enhanced tree dimensions calculation with integrated adaptive spacing
+   * Calculates tree dimensions using the enhanced layout algorithms in the main rendering pipeline
+   * @param person - Root person node
+   * @returns Tree dimensions with adaptive spacing applied
+   */
+  private calculateTreeDimensionsWithAdaptiveSpacing(person: Person): { width: number, height: number, levelWidths: Map<number, number> } {
+    const levelWidths = new Map<number, number>();
+    const levelCounts = new Map<number, number>();
+    
+    // Reset levelNodeCounts for tracking nodes per level for spacing calculations
+    this.levelNodeCounts.clear();
+    
+    // Performance optimization: Calculate tree hash for caching
+    const treeHash = this.calculateTreeHash(person);
+    
+    // Calculate width needed for each level with enhanced adaptive spacing
+    const calculateLevelWidths = (node: Person, level: number): void => {
+      // Performance optimization: Limit processing for extremely deep trees
+      if (level > this.maxRenderLevels) {
+        return;
+      }
+      
+      if (!levelCounts.has(level)) {
+        levelCounts.set(level, 0);
+        levelWidths.set(level, 0);
+        this.levelNodeCounts.set(level, 0);
+      }
+      
+      levelCounts.set(level, levelCounts.get(level)! + 1);
+      this.levelNodeCounts.set(level, this.levelNodeCounts.get(level)! + 1);
+      
+      if (node.children && node.children.length > 0) {
+        node.children.forEach(child => calculateLevelWidths(child, level + 1));
+      }
+    };
+    
+    calculateLevelWidths(person, 0);
+    
+    // Determine if this is a large tree for performance optimizations
+    const totalNodes = Array.from(levelCounts.values()).reduce((sum, count) => sum + count, 0);
+    this.isLargeTree = totalNodes > this.performanceThreshold || levelCounts.size > 7;
+    
+    // Calculate total width and height using enhanced adaptive spacing algorithms
+    let maxWidth = 0;
+    let maxLevel = 0;
+    
+    levelCounts.forEach((count, level) => {
+      // Use enhanced adaptive spacing calculation for main rendering pipeline
+      const adaptiveSpacing = this.calculateEnhancedAdaptiveSpacing(level, count, levelCounts.size);
+      
+      // Store the calculated spacing in layout configuration for consistent use
+      this.layoutConfig.levelBasedSpacing.set(level, adaptiveSpacing);
       
       // Calculate level width with enhanced spacing to handle deeper trees efficiently
       const levelWidth = count * this.nodeWidth + (count - 1) * adaptiveSpacing;
@@ -1094,6 +1650,140 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
     // Performance optimization: Cache render results for large trees
     if (this.isLargeTree) {
       const cacheKey = `${person.id}-${level}-${Math.round(x)}-${Math.round(y)}`;
+      this.renderCache.set(cacheKey, { x, y, width: finalWidth });
+      
+      // Limit cache size to prevent memory issues
+      if (this.renderCache.size > 500) {
+        const firstKey = this.renderCache.keys().next().value;
+        this.renderCache.delete(firstKey);
+      }
+    }
+    
+    return finalWidth;
+  }
+
+  /**
+   * Enhanced node drawing with integrated adaptive layout algorithms
+   * Implements the enhanced layout algorithms in the main rendering pipeline
+   * Ensures proper integration with existing zoom and pan functionality
+   * @param person - Person node to draw
+   * @param x - X coordinate for node position
+   * @param y - Y coordinate for node position
+   * @param level - Current tree level
+   * @param dimensions - Tree dimensions with adaptive spacing
+   * @returns Width of the drawn node and its children
+   */
+  private drawNodeWithAdaptiveLayout(person: Person, x: number, y: number, level: number, dimensions: { width: number, levelWidths: Map<number, number> }): number {
+    if (!person) return 0;
+    
+    // Performance optimization: Skip rendering for extremely deep levels in large trees
+    if (this.isLargeTree && level > this.maxRenderLevels) {
+      return this.nodeWidth;
+    }
+    
+    const isRoot = level === 0;
+    
+    // Performance optimization: Check render cache for large trees
+    const cacheKey = `adaptive-${person.id}-${level}-${Math.round(x)}-${Math.round(y)}-${this.scale}`;
+    if (this.isLargeTree && this.renderCache.has(cacheKey)) {
+      const cached = this.renderCache.get(cacheKey)!;
+      // Use cached dimensions but still update bounding box for overlap detection
+      this.updateNodeBoundingBox(person.id, cached.x, cached.y, level);
+      return cached.width;
+    }
+    
+    // Update bounding box for overlap detection
+    this.updateNodeBoundingBox(person.id, x, y, level);
+    
+    // Draw the node with enhanced styling for better visibility
+    this.ctx.fillStyle = isRoot ? this.rootNodeColor : this.nodeColor;
+    this.ctx.strokeStyle = isRoot ? this.lineColor : '#e4e7eb';
+    this.ctx.lineWidth = 2;
+    
+    // Draw rounded rectangle
+    this.roundRect(x, y, this.nodeWidth, this.nodeHeight, this.cornerRadius);
+    
+    // Add colored border on left side
+    this.ctx.fillStyle = this.lineColor;
+    this.ctx.fillRect(x, y, 4, this.nodeHeight);
+    
+    // Draw text with enhanced readability
+    this.ctx.fillStyle = this.idColor;
+    this.ctx.font = 'bold 14px Arial';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText(person.id, x + this.nodeWidth / 2, y + 20);
+    
+    this.ctx.fillStyle = this.textColor;
+    this.ctx.font = '14px Arial';
+    this.ctx.fillText(person.name, x + this.nodeWidth / 2, y + 40);
+    
+    // If no children, return node width
+    if (!person.children || person.children.length === 0) {
+      return this.nodeWidth;
+    }
+    
+    // Calculate positions for children using enhanced adaptive spacing
+    const nextLevel = level + 1;
+    const adjustedVerticalSpacing = this.calculateVerticalSpacingForDepth(this.levelNodeCounts.size);
+    const nextY = y + this.nodeHeight + adjustedVerticalSpacing;
+    const childrenCount = person.children.length;
+    
+    // Use stored adaptive spacing from layout configuration for consistency
+    let adaptiveSpacing = this.layoutConfig.levelBasedSpacing.get(nextLevel);
+    if (!adaptiveSpacing) {
+      // Fallback to calculation if not stored
+      const totalLevels = this.levelNodeCounts.size;
+      adaptiveSpacing = this.calculateEnhancedAdaptiveSpacing(nextLevel, childrenCount, totalLevels);
+      this.layoutConfig.levelBasedSpacing.set(nextLevel, adaptiveSpacing);
+    }
+    
+    const childrenWidth = childrenCount * this.nodeWidth + (childrenCount - 1) * adaptiveSpacing;
+    
+    // Center children under parent with enhanced positioning
+    let childX = x + (this.nodeWidth - childrenWidth) / 2;
+    
+    // Ensure children don't go off-screen or overlap with other elements
+    const canvas = this.canvasRef.nativeElement;
+    const minX = 10; // Minimum margin from canvas edge
+    const maxX = (canvas.width / this.scale) - childrenWidth - 10;
+    childX = Math.max(minX, Math.min(maxX, childX));
+    
+    // Calculate child positions for optimized connection rendering
+    const parentCenterX = x + this.nodeWidth / 2;
+    const parentBottomY = y + this.nodeHeight;
+    const connectorY = y + this.nodeHeight + adjustedVerticalSpacing / 2;
+    
+    // Collect child center positions with adaptive spacing
+    const childPositions: number[] = [];
+    let currentChildX = childX;
+    
+    person.children.forEach(() => {
+      childPositions.push(currentChildX + this.nodeWidth / 2);
+      currentChildX += this.nodeWidth + adaptiveSpacing;
+    });
+    
+    // Use optimized connection rendering methods for clean lines
+    this.drawOptimizedConnections(
+      parentCenterX,
+      parentBottomY,
+      childPositions,
+      connectorY,
+      nextY
+    );
+    
+    // Draw children nodes recursively with adaptive layout
+    let drawChildX = childX;
+    person.children.forEach(child => {
+      // Draw child node and its children using adaptive layout
+      const childWidth = this.drawNodeWithAdaptiveLayout(child, drawChildX, nextY, nextLevel, dimensions);
+      // Use consistent adaptive spacing for positioning
+      drawChildX += childWidth + adaptiveSpacing;
+    });
+    
+    const finalWidth = Math.max(this.nodeWidth, childrenWidth);
+    
+    // Performance optimization: Cache render results for large trees
+    if (this.isLargeTree) {
       this.renderCache.set(cacheKey, { x, y, width: finalWidth });
       
       // Limit cache size to prevent memory issues

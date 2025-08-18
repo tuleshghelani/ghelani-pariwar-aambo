@@ -59,13 +59,13 @@
   - _Requirements: 5.1, 5.2, 5.3_
 
 - [ ] 6. Update drawTree method with enhanced algorithms
-- [ ] 6.1 Integrate adaptive spacing into main drawing logic
+- [x] 6.1 Integrate adaptive spacing into main drawing logic
   - Update drawTree method to use new adaptive spacing calculations
   - Implement the enhanced layout algorithms in the main rendering pipeline
   - Ensure proper integration with existing zoom and pan functionality
   - _Requirements: 1.1, 1.2, 1.3, 3.1, 3.4_
 
-- [ ] 6.2 Add initial view optimization for root level display
+- [x] 6.2 Add initial view optimization for root level display
   - Implement logic to ensure root level is prominently displayed on first load
   - Add automatic centering and scaling to show first 2-3 levels clearly
   - Update initial positioning to work well across different device types
