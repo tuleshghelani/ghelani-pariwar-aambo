@@ -4,15 +4,16 @@
     <button class="zoom-button" (click)="zoomOut()" title="Zoom Out">-</button>
     <button class="zoom-button" (click)="resetView()" title="Reset View">↺</button>
   </div>
-  
+
   <div class="canvas-wrapper">
     <canvas #treeCanvas></canvas>
   </div>
-  
+
   <!-- SEO-friendly hidden content -->
   <div class="seo-content" aria-hidden="true" *ngIf="personData">
     <h2>Ambo/Vansh Vela Family Hierarchy</h2>
-    <p>This family tree represents the hierarchical structure of the Ambo/Vansh Vela family, showing parent-child relationships.</p>
+    <p>This family tree represents the hierarchical structure of the Ambo/Vansh Vela family, showing parent-child
+      relationships.</p>
     <ng-container *ngTemplateOutlet="seoTemplate; context: { $implicit: personData }"></ng-container>
   </div>
 </div>
