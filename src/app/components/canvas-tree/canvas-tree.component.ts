@@ -1,5 +1,5 @@
-import { Component, ElementRef, Input, OnInit, ViewChild, AfterViewInit, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ElementRef, Input, OnInit, ViewChild, AfterViewInit, HostListener, PLATFORM_ID, Inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Person } from '../../models/person.model';
 
 @Component({
@@ -20,6 +20,7 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
   private isDragging: boolean = false;
   private lastX: number = 0;
   private lastY: number = 0;
+  private isBrowser: boolean = false;
   
   // Node styling
   private readonly nodeWidth: number = 180;
@@ -35,39 +36,51 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
   private readonly textColor: string = '#343a40';
   private readonly idColor: string = '#007bff';
   
-  constructor() {}
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+  }
   
   ngOnInit(): void {}
   
   ngAfterViewInit(): void {
+    if (!this.isBrowser) return; // Skip canvas operations on server
+    
     const canvas = this.canvasRef.nativeElement;
     this.ctx = canvas.getContext('2d')!;
     
     // Set initial canvas size
     this.resizeCanvas();
     
-    // Set initial cursor style
-    canvas.style.cursor = 'grab';
-    
-    // Draw the tree when data is available
-    if (this.personData) {
-      this.drawTree();
+    // Set initial cursor style for desktop
+    if (window.innerWidth > 576) {
+      canvas.style.cursor = 'grab';
     }
+    
+    // Add a small delay to ensure the canvas is properly sized before drawing
+    setTimeout(() => {
+      // Draw the tree when data is available
+      if (this.personData) {
+        this.drawTree();
+      }
+    }, 100);
   }
   
   // Zoom control methods
   zoomIn(): void {
+    if (!this.isBrowser) return;
     this.scale *= 1.2;
     this.drawTree();
   }
   
   zoomOut(): void {
+    if (!this.isBrowser) return;
     this.scale *= 0.8;
     if (this.scale < 0.2) this.scale = 0.2; // Prevent zooming out too far
     this.drawTree();
   }
   
   resetView(): void {
+    if (!this.isBrowser) return;
     this.scale = 1;
     this.offsetX = 0;
     this.offsetY = 0;
@@ -76,12 +89,14 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
   
   @HostListener('window:resize')
   onResize(): void {
+    if (!this.isBrowser) return;
     this.resizeCanvas();
     this.drawTree();
   }
   
   @HostListener('wheel', ['$event'])
   onMouseWheel(event: WheelEvent): void {
+    if (!this.isBrowser) return;
     event.preventDefault();
     
     // Get mouse position relative to canvas
@@ -115,6 +130,7 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
   
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent): void {
+    if (!this.isBrowser) return;
     this.isDragging = true;
     this.lastX = event.clientX;
     this.lastY = event.clientY;
@@ -123,6 +139,7 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
   
   @HostListener('mousemove', ['$event'])
   onMouseMove(event: MouseEvent): void {
+    if (!this.isBrowser) return;
     if (this.isDragging) {
       const deltaX = event.clientX - this.lastX;
       const deltaY = event.clientY - this.lastY;
@@ -140,22 +157,133 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
   @HostListener('mouseup')
   @HostListener('mouseleave')
   onMouseUp(): void {
+    if (!this.isBrowser) return;
     this.isDragging = false;
     this.canvasRef.nativeElement.style.cursor = 'grab';
   }
   
+  // Touch event handlers for mobile devices
+  private lastTouchDistance: number = 0;
+  
+  @HostListener('touchstart', ['$event'])
+  onTouchStart(event: TouchEvent): void {
+    if (!this.isBrowser) return;
+    event.preventDefault();
+    
+    if (event.touches.length === 1) {
+      // Single touch - panning
+      this.isDragging = true;
+      this.lastX = event.touches[0].clientX;
+      this.lastY = event.touches[0].clientY;
+    } else if (event.touches.length === 2) {
+      // Two touches - pinch to zoom
+      this.isDragging = false;
+      const touch1 = event.touches[0];
+      const touch2 = event.touches[1];
+      this.lastTouchDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+    }
+  }
+  
+  @HostListener('touchmove', ['$event'])
+  onTouchMove(event: TouchEvent): void {
+    if (!this.isBrowser) return;
+    event.preventDefault();
+    
+    if (event.touches.length === 1 && this.isDragging) {
+      // Single touch - panning
+      const deltaX = event.touches[0].clientX - this.lastX;
+      const deltaY = event.touches[0].clientY - this.lastY;
+      
+      this.offsetX += deltaX;
+      this.offsetY += deltaY;
+      
+      this.lastX = event.touches[0].clientX;
+      this.lastY = event.touches[0].clientY;
+      
+      this.drawTree();
+    } else if (event.touches.length === 2) {
+      // Two touches - pinch to zoom
+      const touch1 = event.touches[0];
+      const touch2 = event.touches[1];
+      
+      // Calculate current distance between touches
+      const currentDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      
+      // Calculate zoom factor based on the change in distance
+      if (this.lastTouchDistance > 0) {
+        const zoomFactor = currentDistance / this.lastTouchDistance;
+        
+        // Apply zoom if it's within reasonable limits
+        const newScale = this.scale * zoomFactor;
+        if (newScale >= 0.2 && newScale <= 5) {
+          // Calculate the midpoint between the two touches
+          const midX = (touch1.clientX + touch2.clientX) / 2;
+          const midY = (touch1.clientY + touch2.clientY) / 2;
+          
+          // Get canvas position
+          const rect = this.canvasRef.nativeElement.getBoundingClientRect();
+          
+          // Calculate position relative to canvas
+          const canvasMidX = midX - rect.left;
+          const canvasMidY = midY - rect.top;
+          
+          // Calculate world position before zoom
+          const worldX = (canvasMidX - this.offsetX) / this.scale;
+          const worldY = (canvasMidY - this.offsetY) / this.scale;
+          
+          // Update scale
+          this.scale = newScale;
+          
+          // Update offset to zoom at the midpoint between touches
+          this.offsetX = canvasMidX - worldX * this.scale;
+          this.offsetY = canvasMidY - worldY * this.scale;
+          
+          this.drawTree();
+        }
+      }
+      
+      this.lastTouchDistance = currentDistance;
+    }
+  }
+  
+  @HostListener('touchend')
+  @HostListener('touchcancel')
+  onTouchEnd(): void {
+    if (!this.isBrowser) return;
+    this.isDragging = false;
+    this.lastTouchDistance = 0;
+  }
+  
   private resizeCanvas(): void {
+    if (!this.isBrowser) return;
     const canvas = this.canvasRef.nativeElement;
     const container = canvas.parentElement;
     
     if (container) {
+      // Set canvas dimensions to match container
       canvas.width = container.clientWidth;
       canvas.height = container.clientHeight;
+      
+      // For mobile devices, ensure minimum dimensions
+      if (window.innerWidth <= 576 && this.scale === 1) {
+        // Set initial scale for small screens to show more of the tree
+        this.scale = 0.6;
+        
+        // Set initial offset to center the tree better on small screens
+        this.offsetX = canvas.width / 4;
+        this.offsetY = 20;
+      }
     }
   }
   
   private drawTree(): void {
-    if (!this.ctx || !this.personData) return;
+    if (!this.isBrowser || !this.ctx || !this.personData) return;
     
     const canvas = this.canvasRef.nativeElement;
     
@@ -174,6 +302,15 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
     
     // Center the tree horizontally
     const startX = (canvas.width / this.scale - treeDimensions.width) / 2;
+    
+    // For mobile devices, ensure the tree is visible initially
+    if (window.innerWidth <= 576 && Math.abs(this.offsetX) < 10 && Math.abs(this.offsetY) < 10) {
+      // This is likely the first draw on mobile, adjust position to show more of the tree
+      this.offsetX = canvas.width / 4;
+      this.scale = 0.5;
+      this.ctx.translate(this.offsetX, this.offsetY);
+      this.ctx.scale(this.scale, this.scale);
+    }
     
     // Draw from root node
     this.drawNode(this.personData, startX, 50, 0, treeDimensions);
@@ -222,7 +359,7 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
     if (!person) return 0;
     
     const isRoot = level === 0;
-    const levelWidth = dimensions.levelWidths.get(level) || 0;
+    // const levelWidth = dimensions.levelWidths.get(level) || 0;
     
     // Draw the node
     this.ctx.fillStyle = isRoot ? this.rootNodeColor : this.nodeColor;
@@ -272,14 +409,35 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
     this.ctx.lineTo(parentBottomX, connectorY);
     this.ctx.stroke();
     
-    // Draw horizontal connector line if multiple children
-    if (childrenCount > 1) {
-      const leftmostChildX = childX + this.nodeWidth / 2;
-      const rightmostChildX = childX + childrenWidth - this.nodeWidth / 2;
+    // Always draw a horizontal connector line at the parent's level
+    // This ensures the line is drawn correctly for all cases
+    
+    // Calculate the full width of the level to ensure the connector spans the entire width
+    const childrenLevelWidth = dimensions.levelWidths.get(level + 1) || 0;
+    
+    // If there's only one child but it's not centered under the parent, draw a horizontal line
+    // from the parent's center to the child's center
+    if (childrenCount === 1 && Math.abs((x + this.nodeWidth/2) - (childX + this.nodeWidth/2)) > 5) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(parentBottomX, connectorY);
+      this.ctx.lineTo(childX + this.nodeWidth / 2, connectorY);
+      this.ctx.stroke();
+    } 
+    // For multiple children, draw a line connecting all children with extra extension
+    else if (childrenCount > 1) {
+      // Calculate the leftmost and rightmost positions for the connector line
+      // For Person201's children (Person301 and Person302), this should span the full width
+      const leftmostChildX = childX;
+      const rightmostChildX = childX + childrenWidth - this.nodeWidth;
+      
+      // Draw a horizontal line that spans the entire width between the leftmost and rightmost children
+      // Add a significant extension to ensure it's visible beyond the nodes
+      const extensionAmount = 120; // Larger extension amount for better visibility
       
       this.ctx.beginPath();
-      this.ctx.moveTo(leftmostChildX, connectorY);
-      this.ctx.lineTo(rightmostChildX, connectorY);
+      // Draw a line from well before the first child to well after the last child
+      this.ctx.moveTo(leftmostChildX - extensionAmount, connectorY);
+      this.ctx.lineTo(rightmostChildX + this.nodeWidth + extensionAmount, connectorY);
       this.ctx.stroke();
     }
     
