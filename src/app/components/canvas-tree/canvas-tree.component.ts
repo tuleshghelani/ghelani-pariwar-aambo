@@ -375,14 +375,23 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
     
     calculateLevelWidths(person, 0);
     
-    // Calculate total width and height
+    // Calculate total width and height using adaptive spacing
     let maxWidth = 0;
     let maxLevel = 0;
     
     levelCounts.forEach((count, level) => {
-      const levelWidth = count * this.nodeWidth + (count - 1) * this.horizontalSpacing;
-      levelWidths.set(level, levelWidth);
-      maxWidth = Math.max(maxWidth, levelWidth);
+      // Use adaptive spacing calculations for dynamic spacing
+      const adaptiveSpacing = this.calculateAdaptiveSpacing(level, count);
+      
+      // Calculate level width with adaptive spacing to prevent overlapping
+      const levelWidth = count * this.nodeWidth + (count - 1) * adaptiveSpacing;
+      
+      // Ensure minimum spacing requirements are met to prevent overlapping
+      const minRequiredWidth = count * this.nodeWidth + (count - 1) * this.minHorizontalSpacing;
+      const finalLevelWidth = Math.max(levelWidth, minRequiredWidth);
+      
+      levelWidths.set(level, finalLevelWidth);
+      maxWidth = Math.max(maxWidth, finalLevelWidth);
       maxLevel = Math.max(maxLevel, level);
     });
     
@@ -428,68 +437,44 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
     const nextLevel = level + 1;
     const nextY = y + this.nodeHeight + this.verticalSpacing;
     const childrenCount = person.children.length;
-    const childrenWidth = childrenCount * this.nodeWidth + (childrenCount - 1) * this.horizontalSpacing;
+    
+    // Use adaptive spacing for children positioning to prevent overlapping
+    const adaptiveSpacing = this.calculateAdaptiveSpacing(nextLevel, childrenCount);
+    const childrenWidth = childrenCount * this.nodeWidth + (childrenCount - 1) * adaptiveSpacing;
     
     // Center children under parent
     let childX = x + (this.nodeWidth - childrenWidth) / 2;
     
-    // Draw connector line from parent to middle point above children
-    const parentBottomX = x + this.nodeWidth / 2;
+    // Calculate child positions for optimized connection rendering
+    const parentCenterX = x + this.nodeWidth / 2;
     const parentBottomY = y + this.nodeHeight;
     const connectorY = y + this.nodeHeight + this.verticalSpacing / 2;
     
-    this.ctx.strokeStyle = this.lineColor;
-    this.ctx.lineWidth = 2;
-    this.ctx.beginPath();
-    this.ctx.moveTo(parentBottomX, parentBottomY);
-    this.ctx.lineTo(parentBottomX, connectorY);
-    this.ctx.stroke();
+    // Collect child center positions
+    const childPositions: number[] = [];
+    let currentChildX = childX;
     
-    // Always draw a horizontal connector line at the parent's level
-    // This ensures the line is drawn correctly for all cases
+    person.children.forEach(() => {
+      childPositions.push(currentChildX + this.nodeWidth / 2);
+      currentChildX += this.nodeWidth + adaptiveSpacing;
+    });
     
-    // Calculate the full width of the level to ensure the connector spans the entire width
-    const childrenLevelWidth = dimensions.levelWidths.get(level + 1) || 0;
+    // Use optimized connection rendering methods
+    this.drawOptimizedConnections(
+      parentCenterX,
+      parentBottomY,
+      childPositions,
+      connectorY,
+      nextY
+    );
     
-    // If there's only one child but it's not centered under the parent, draw a horizontal line
-    // from the parent's center to the child's center
-    if (childrenCount === 1 && Math.abs((x + this.nodeWidth/2) - (childX + this.nodeWidth/2)) > 5) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(parentBottomX, connectorY);
-      this.ctx.lineTo(childX + this.nodeWidth / 2, connectorY);
-      this.ctx.stroke();
-    } 
-    // For multiple children, draw a line connecting all children with extra extension
-    else if (childrenCount > 1) {
-      // Calculate the leftmost and rightmost positions for the connector line
-      // For Person201's children (Person301 and Person302), this should span the full width
-      const leftmostChildX = childX;
-      const rightmostChildX = childX + childrenWidth - this.nodeWidth;
-      
-      // Draw a horizontal line that spans the entire width between the leftmost and rightmost children
-      // Add a significant extension to ensure it's visible beyond the nodes
-      const extensionAmount = 120; // Larger extension amount for better visibility
-      
-      this.ctx.beginPath();
-      // Draw a line from well before the first child to well after the last child
-      this.ctx.moveTo(leftmostChildX - extensionAmount, connectorY);
-      this.ctx.lineTo(rightmostChildX + this.nodeWidth + extensionAmount, connectorY);
-      this.ctx.stroke();
-    }
-    
-    // Draw children and vertical connectors to each child
+    // Draw children nodes
+    let drawChildX = childX;
     person.children.forEach(child => {
-      // Draw vertical connector to this child
-      const childTopX = childX + this.nodeWidth / 2;
-      
-      this.ctx.beginPath();
-      this.ctx.moveTo(childTopX, connectorY);
-      this.ctx.lineTo(childTopX, nextY);
-      this.ctx.stroke();
-      
       // Draw child node and its children
-      const childWidth = this.drawNode(child, childX, nextY, nextLevel, dimensions);
-      childX += childWidth + this.horizontalSpacing;
+      const childWidth = this.drawNode(child, drawChildX, nextY, nextLevel, dimensions);
+      // Use adaptive spacing for consistent positioning
+      drawChildX += childWidth + adaptiveSpacing;
     });
     
     return Math.max(this.nodeWidth, childrenWidth);
@@ -535,6 +520,135 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
     this.layoutConfig.levelBasedSpacing.set(level, calculatedSpacing);
     
     return calculatedSpacing;
+  }
+
+  /**
+   * Draw optimized connection lines for clean rendering without artifacts
+   * Implements separate logic for single child vs multiple children scenarios
+   * @param parentX - Parent node center X coordinate
+   * @param parentY - Parent node bottom Y coordinate
+   * @param childPositions - Array of child center X coordinates
+   * @param connectorY - Y coordinate for horizontal connector line
+   * @param childTopY - Y coordinate for child node tops
+   */
+  private drawOptimizedConnections(
+    parentX: number, 
+    parentY: number, 
+    childPositions: number[], 
+    connectorY: number, 
+    childTopY: number
+  ): void {
+    if (childPositions.length === 0) return;
+
+    // Set line style for connections
+    this.ctx.strokeStyle = this.lineColor;
+    this.ctx.lineWidth = 2;
+
+    // Draw vertical line from parent to connector level
+    this.drawPreciseLine(parentX, parentY, parentX, connectorY);
+
+    if (childPositions.length === 1) {
+      // Single child scenario: direct connection
+      this.drawSingleChildConnection(parentX, connectorY, childPositions[0], childTopY);
+    } else {
+      // Multiple children scenario: optimized horizontal span
+      this.drawMultipleChildrenConnections(parentX, connectorY, childPositions, childTopY);
+    }
+  }
+
+  /**
+   * Draw connection for single child scenario
+   * Creates direct connection from parent to child without unnecessary extensions
+   * @param parentX - Parent center X coordinate
+   * @param connectorY - Y coordinate for horizontal connector
+   * @param childX - Child center X coordinate
+   * @param childTopY - Child top Y coordinate
+   */
+  private drawSingleChildConnection(
+    parentX: number, 
+    connectorY: number, 
+    childX: number, 
+    childTopY: number
+  ): void {
+    // Draw horizontal line from parent to child
+    this.drawPreciseLine(parentX, connectorY, childX, connectorY);
+    
+    // Draw vertical line down to child
+    this.drawPreciseLine(childX, connectorY, childX, childTopY);
+  }
+
+  /**
+   * Draw connections for multiple children scenario
+   * Creates optimized horizontal span only between actual child positions
+   * @param parentX - Parent center X coordinate
+   * @param connectorY - Y coordinate for horizontal connector
+   * @param childPositions - Array of child center X coordinates
+   * @param childTopY - Child top Y coordinate
+   */
+  private drawMultipleChildrenConnections(
+    parentX: number, 
+    connectorY: number, 
+    childPositions: number[], 
+    childTopY: number
+  ): void {
+    // Calculate precise span between first and last child
+    const leftmostX = childPositions[0];
+    const rightmostX = childPositions[childPositions.length - 1];
+    
+    // Draw horizontal connector line with minimal buffer, no excessive extensions
+    const bufferLeft = Math.max(0, leftmostX - this.connectionLineBuffer);
+    const bufferRight = Math.min(rightmostX + this.connectionLineBuffer, rightmostX + this.connectionLineBuffer);
+    
+    this.drawPreciseLine(bufferLeft, connectorY, bufferRight, connectorY);
+    
+    // Draw vertical connectors to each child
+    childPositions.forEach(childX => {
+      this.drawPreciseLine(childX, connectorY, childX, childTopY);
+    });
+  }
+
+  /**
+   * Helper method for drawing precise line segments without artifacts
+   * Ensures clean rendering by using proper canvas drawing techniques
+   * @param x1 - Start X coordinate
+   * @param y1 - Start Y coordinate
+   * @param x2 - End X coordinate
+   * @param y2 - End Y coordinate
+   */
+  private drawPreciseLine(x1: number, y1: number, x2: number, y2: number): void {
+    this.ctx.beginPath();
+    
+    // Use pixel-perfect positioning to avoid anti-aliasing artifacts
+    const pixelX1 = Math.round(x1) + 0.5;
+    const pixelY1 = Math.round(y1) + 0.5;
+    const pixelX2 = Math.round(x2) + 0.5;
+    const pixelY2 = Math.round(y2) + 0.5;
+    
+    this.ctx.moveTo(pixelX1, pixelY1);
+    this.ctx.lineTo(pixelX2, pixelY2);
+    this.ctx.stroke();
+  }
+
+  /**
+   * Helper method for drawing clean horizontal line segments
+   * Specialized for horizontal connections with precise positioning
+   * @param startX - Start X coordinate
+   * @param endX - End X coordinate
+   * @param y - Y coordinate for the horizontal line
+   */
+  private drawHorizontalLine(startX: number, endX: number, y: number): void {
+    this.drawPreciseLine(startX, y, endX, y);
+  }
+
+  /**
+   * Helper method for drawing clean vertical line segments
+   * Specialized for vertical connections with precise positioning
+   * @param x - X coordinate for the vertical line
+   * @param startY - Start Y coordinate
+   * @param endY - End Y coordinate
+   */
+  private drawVerticalLine(x: number, startY: number, endY: number): void {
+    this.drawPreciseLine(x, startY, x, endY);
   }
 
   private roundRect(x: number, y: number, width: number, height: number, radius: number): void {

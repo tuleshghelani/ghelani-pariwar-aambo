@@ -6,27 +6,27 @@
   - Create levelNodeCounts Map to track nodes per level for spacing calculations
   - _Requirements: 1.1, 1.3, 5.1, 5.2_
 
-- [ ] 2. Implement adaptive spacing calculation algorithm
+- [x] 2. Implement adaptive spacing calculation algorithm
 - [x] 2.1 Create calculateAdaptiveSpacing method
   - Write method to calculate optimal horizontal spacing based on tree width and canvas dimensions
   - Implement logic to adjust spacing dynamically for different tree depths
   - Add unit tests for spacing calculations with various tree configurations
   - _Requirements: 1.1, 1.3, 5.1, 5.2, 5.3_
 
-- [ ] 2.2 Enhance calculateTreeDimensions method
+- [x] 2.2 Enhance calculateTreeDimensions method
   - Modify existing method to use adaptive spacing calculations
   - Add logic to prevent overlapping by ensuring minimum spacing requirements
   - Update level width calculations to account for dynamic spacing
   - _Requirements: 1.1, 1.2, 1.3, 5.3_
 
-- [ ] 3. Fix connection line rendering to remove unnecessary extensions
-- [ ] 3.1 Refactor drawNode method connection line logic
+- [x] 3. Fix connection line rendering to remove unnecessary extensions
+- [x] 3.1 Refactor drawNode method connection line logic
   - Remove excessive horizontal line extensions that go beyond actual child nodes
   - Implement precise connection line calculations based on actual child positions
   - Add connectionLineBuffer property to control minimal visual spacing
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 3.2 Create optimized connection rendering methods
+- [x] 3.2 Create optimized connection rendering methods
   - Write drawOptimizedConnections method for clean connection line rendering
   - Implement separate logic for single child vs multiple children scenarios
   - Add helper methods for drawing precise line segments without artifacts
