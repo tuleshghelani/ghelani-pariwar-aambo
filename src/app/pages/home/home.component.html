@@ -20,8 +20,16 @@
     </ul>
   </div>
   
-  <!-- Vertical Tree view -->
+  <!-- Canvas Tree View (New) -->
+  <div *ngIf="!loading && !error && personData" class="tree-view-section">
+    <h2>Interactive Family Tree</h2>
+    <p class="tree-description">Use mouse wheel to zoom in/out, drag to pan, or use the controls in the top-right corner.</p>
+    <app-canvas-tree [personData]="personData"></app-canvas-tree>
+  </div>
+  
+  <!-- Original Vertical Tree view (kept for reference) -->
   <div *ngIf="!loading && !error && personData" class="tree-view vertical-tree">
+    <h2>Traditional Family Tree View</h2>
     <div class="tree-wrapper">
       <!-- Root node -->
       <div class="tree-level root-level">

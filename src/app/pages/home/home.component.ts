@@ -7,11 +7,12 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { PersonService } from '../../services/person.service';
 import { DataValidatorService } from '../../services/data-validator.service';
 import { Person } from '../../models/person.model';
+import { CanvasTreeComponent } from '../../components/canvas-tree/canvas-tree.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, CanvasTreeComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })

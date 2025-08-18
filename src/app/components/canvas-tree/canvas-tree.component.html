@@ -1,0 +1,34 @@
+<div class="canvas-tree-container">
+  <div class="canvas-controls">
+    <button class="zoom-button" (click)="zoomIn()" title="Zoom In">+</button>
+    <button class="zoom-button" (click)="zoomOut()" title="Zoom Out">-</button>
+    <button class="zoom-button" (click)="resetView()" title="Reset View">↺</button>
+  </div>
+  
+  <div class="canvas-wrapper">
+    <canvas #treeCanvas></canvas>
+  </div>
+  
+  <!-- SEO-friendly hidden content -->
+  <div class="seo-content" aria-hidden="true" *ngIf="personData">
+    <h2>Ambo/Vansh Vela Family Hierarchy</h2>
+    <p>This family tree represents the hierarchical structure of the Ambo/Vansh Vela family, showing parent-child relationships.</p>
+    <ng-container *ngTemplateOutlet="seoTemplate; context: { $implicit: personData }"></ng-container>
+  </div>
+</div>
+
+<!-- SEO template -->
+<ng-template #seoTemplate let-person>
+  <div class="seo-person">
+    <h3>{{ person.name }}</h3>
+    <ng-container *ngIf="person.children && person.children.length > 0">
+      <p>Children:</p>
+      <ul>
+        <li *ngFor="let child of person.children">
+          {{ child.name }}
+          <ng-container *ngTemplateOutlet="seoTemplate; context: { $implicit: child }"></ng-container>
+        </li>
+      </ul>
+    </ng-container>
+  </div>
+</ng-template>
