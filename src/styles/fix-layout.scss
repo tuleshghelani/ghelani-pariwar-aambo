@@ -1,0 +1,32 @@
+// Fix for the white space on the right side
+html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+  }
+  
+  main {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  // Fix for container issues
+  .container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    box-sizing: border-box;
+  }
+  
+  // Remove any horizontal scrolling on sections
+  section {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }

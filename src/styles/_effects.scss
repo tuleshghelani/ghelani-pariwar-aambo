@@ -1,0 +1,70 @@
+// Gradients
+.primary-gradient {
+  background: linear-gradient(45deg, $primary, $primary-light);
+  
+  &:hover {
+    background: linear-gradient(45deg, $primary-light, $primary);
+  }
+}
+
+.secondary-gradient {
+  background: linear-gradient(45deg, $secondary, $secondary-light);
+  
+  &:hover {
+    background: linear-gradient(45deg, $secondary-light, $secondary);
+  }
+}
+
+// Premium Gradient - combines primary and secondary
+.premium-gradient {
+  background: linear-gradient(135deg, $primary-dark, $primary, $secondary-light);
+  
+  &:hover {
+    background: linear-gradient(135deg, $secondary-light, $primary, $primary-dark);
+  }
+}
+
+// Shadows
+.elevation-1 {
+  box-shadow: 0 2px 4px rgba($dark, 0.1);
+}
+
+.elevation-2 {
+  box-shadow: 0 4px 8px rgba($dark, 0.1);
+}
+
+.elevation-3 {
+  box-shadow: 0 8px 16px rgba($dark, 0.1);
+}
+
+// Teal-specific shadows
+.primary-shadow {
+  box-shadow: 0 4px 12px rgba($primary, 0.2);
+}
+
+// Hover Effects
+.hover-lift {
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.hover-scale {
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+// Premium hover effect
+.premium-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba($primary, 0.25);
+  }
+} 

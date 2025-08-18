@@ -1,0 +1,92 @@
+<div class="tree-view-container">
+  <h1>Ambo/Vansh Vela Family Tree</h1>
+  
+  <!-- Loading state -->
+  <div *ngIf="loading" class="loading-state">
+    <p>Loading family tree data...</p>
+  </div>
+  
+  <!-- Error state -->
+  <div *ngIf="error" class="error-state">
+    <p>{{ errorMessage }}</p>
+    <button (click)="loadPersonData()">Retry</button>
+  </div>
+  
+  <!-- Validation warnings -->
+  <div *ngIf="validationErrors.length > 0" class="validation-warnings">
+    <h3>Data Structure Warnings:</h3>
+    <ul>
+      <li *ngFor="let error of validationErrors">{{ error }}</li>
+    </ul>
+  </div>
+  
+  <!-- Vertical Tree view -->
+  <div *ngIf="!loading && !error && personData" class="tree-view vertical-tree">
+    <div class="tree-wrapper">
+      <!-- Root node -->
+      <div class="tree-level root-level">
+        <div class="person-node root-node">
+          <span class="person-id">{{ personData.id }}</span>
+          <span class="person-name">{{ personData.name }}</span>
+        </div>
+      </div>
+      
+      <!-- Recursive tree structure -->
+      <ng-container *ngIf="personData.children && personData.children.length > 0">
+        <div class="connector-wrapper root-connector">
+          <div class="connector-line vertical"></div>
+        </div>
+        <div class="tree-level">
+          <ng-container *ngTemplateOutlet="childrenLevelTemplate; context: { $implicit: personData.children, level: 1 }"></ng-container>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<!-- Template for recursive rendering of children levels -->
+<ng-template #childrenLevelTemplate let-children let-level="level">
+  <div class="level-container">
+    <ng-container *ngFor="let child of children; let i = index; let isLast = last">
+      <div class="child-wrapper">
+        <div class="person-node" [ngClass]="{'last-child': isLast && i > 0, 'first-child': i === 0}">
+          <span class="person-id">{{ child.id }}</span>
+          <span class="person-name">{{ child.name }}</span>
+        </div>
+        
+        <!-- Next level children -->
+        <ng-container *ngIf="child.children && child.children.length > 0">
+          <div class="connector-wrapper">
+            <div class="connector-line vertical"></div>
+          </div>
+          <div class="tree-sublevel">
+            <ng-container *ngTemplateOutlet="childrenLevelTemplate; context: { $implicit: child.children, level: level + 1 }"></ng-container>
+          </div>
+        </ng-container>
+      </div>
+    </ng-container>
+  </div>
+</ng-template>
+
+<!-- SEO-friendly hidden structure for search engines -->
+<div class="seo-content" aria-hidden="true" *ngIf="!loading && !error && personData">
+  <h2>Ambo/Vansh Vela Family Hierarchy</h2>
+  <p>This family tree represents the hierarchical structure of the Ambo/Vansh Vela family, showing parent-child relationships.</p>
+  <ng-container *ngTemplateOutlet="seoTemplate; context: { $implicit: personData }"></ng-container>
+</div>
+
+<!-- SEO template -->
+<ng-template #seoTemplate let-person>
+  <div class="seo-person">
+    <h3>{{ person.name }}</h3>
+    <ng-container *ngIf="person.children && person.children.length > 0">
+      <p>Children:</p>
+      <ul>
+        <li *ngFor="let child of person.children">
+          {{ child.name }}
+          <ng-container *ngTemplateOutlet="seoTemplate; context: { $implicit: child }"></ng-container>
+        </li>
+      </ul>
+    </ng-container>
+  </div>
+</ng-template>

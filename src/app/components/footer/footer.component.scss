@@ -1,0 +1,448 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+@import '../../../styles/effects';
+@import '../../../styles.scss';
+
+// Dark theme variables (matching home component)
+$footer-bg: #181c23;
+$footer-bg-alt: #232834;
+$footer-card: #232834;
+$footer-text: #e0e0e0;
+$footer-link: $primary;
+$footer-link-hover: #fff;
+$footer-border: rgba(255,255,255,0.08);
+$footer-accent: #90caf9;
+
+// Mixins
+@mixin footer-hover {
+  transition: all 0.3s ease;
+  &:hover {
+    color: $primary-light;
+    transform: translateY(-3px);
+  }
+}
+
+// Breakpoints
+$mobile: 576px;
+$tablet: 768px;
+$desktop: 1024px;
+$large-desktop: 1200px;
+
+@mixin mobile {
+  @media (max-width: #{$mobile}) { @content; }
+}
+
+@mixin tablet {
+  @media (min-width: #{$mobile + 1}) and (max-width: #{$tablet}) { @content; }
+}
+
+@mixin desktop {
+  @media (min-width: #{$tablet + 1}) { @content; }
+}
+
+.premium-footer {
+  background: linear-gradient(to bottom, $footer-bg, $footer-bg-alt 90%);
+  color: $footer-text;
+  font-family: $font-family-base;
+  padding: 5rem 0 0;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  
+  // Decorative top pattern
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(to right, 
+      $primary, $primary-light, $secondary, $primary-light, $primary);
+    background-size: 200% 100%;
+    animation: shimmer 3s infinite linear;
+  }
+  
+  @keyframes shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    width: 100%;
+
+    @include mobile {
+      padding: 0 1.25rem;
+    }
+  }
+
+  .footer-top {
+    .container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3rem;
+
+      @media (max-width: 1024px) {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2.5rem;
+      }
+      @media (max-width: 576px) {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+      }
+    }
+  }
+
+  // Company Info Section
+  .company-info {
+    @include mobile {
+      text-align: center;
+    }
+
+    .logo-wrapper {
+      margin-bottom: 1.5rem;
+
+      @include mobile {
+        display: flex;
+        justify-content: center;
+      }
+
+      .footer-logo {
+        max-width: 140px;
+        height: auto;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+      }
+    }
+
+    .company-name {
+      color: $footer-link;
+      font-size: 1.625rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      letter-spacing: 0.01em;
+    }
+
+    .company-description {
+      line-height: 1.7;
+      margin-bottom: 1.75rem;
+      font-size: 1rem;
+      color: $footer-text;
+      max-width: 90%;
+
+      @include mobile {
+        margin: 0 auto 1.75rem;
+      }
+    }
+
+    .make-in-india {
+      margin: 1.5rem 0;
+      
+      .make-in-india-logo {
+        max-width: 120px;
+        height: auto;
+        transition: transform 0.3s;
+        
+        &:hover {
+          transform: scale(1.05);
+        }
+      }
+    }
+
+  }
+
+  
+  .social-links {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+
+    @include mobile {
+      justify-content: center;
+    }
+
+    .social-link {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: $footer-card;
+      color: $footer-link;
+      border-radius: 50%;
+      transition: all 0.3s;
+      font-size: 1.1rem;
+      position: relative;
+      overflow: hidden;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, $primary, $primary-light);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 1;
+      }
+      
+      i {
+        position: relative;
+        z-index: 2;
+        transition: transform 0.3s ease;
+      }
+
+      &:hover {
+        background: $footer-link;
+        color: $footer-bg;
+      }
+    }
+  }
+  
+  // Footer Sections
+  .footer-section {
+    margin-bottom: 2rem;
+
+    .footer-title {
+      color: $footer-link;
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-bottom: 1.75rem;
+      position: relative;
+      padding-bottom: 0.75rem;
+      letter-spacing: 0.01em;
+
+      @include mobile {
+        text-align: center;
+        
+        &::after {
+          left: 50%;
+          transform: translateX(-50%);
+        }
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(to right, $footer-link, $footer-link-hover);
+        border-radius: 10px;
+      }
+    }
+  }
+
+  // Footer Lists
+  .footer-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    @include mobile {
+      text-align: center;
+    }
+
+    li {
+      margin-bottom: 0.875rem;
+
+      a {
+        color: $footer-link;
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: color 0.3s;
+
+        @include mobile {
+          padding-left: 0;
+          
+          &::before {
+            display: none;
+          }
+        }
+
+        &::before {
+          content: '→';
+          position: absolute;
+          left: 0;
+          transition: transform 0.3s ease;
+          color: $primary;
+        }
+
+        &:hover {
+          color: $footer-link-hover;
+        }
+      }
+    }
+  }
+
+  // Contact List
+  .contact-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    @include mobile {
+      max-width: 320px;
+      margin: 0 auto;
+    }
+
+    .contact-item {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      align-items: flex-start;
+      
+      @include mobile {
+        text-align: left;
+      }
+
+      i {
+        color: $footer-link;
+        font-size: 1.25rem;
+        margin-top: 0.25rem;
+        width: 20px;
+        text-align: center;
+      }
+
+      div {
+        flex: 1;
+        
+        strong {
+          color: $footer-link;
+          display: block;
+          margin-bottom: 0.25rem;
+          font-size: 1rem;
+          letter-spacing: 0.01em;
+        }
+
+        a {
+          color: $footer-text;
+          text-decoration: none;
+          transition: color 0.3s;
+          font-size: 1rem;
+          display: inline-block;
+
+          &:hover {
+            color: $footer-link-hover;
+          }
+        }
+      }
+    }
+  }
+
+  // Footer Bottom
+  .footer-bottom {
+    margin-top: 3rem;
+    padding: 1.75rem 0;
+    border-top: 1px solid $footer-border;
+    text-align: center;
+    background: $footer-bg-alt;
+
+    .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      @include mobile {
+        flex-direction: column;
+        gap: 1rem;
+      }
+    }
+
+    .copyright {
+      margin: 0;
+      font-size: 0.95rem;
+      color: $footer-text;
+    }
+
+    .credits {
+      margin: 0;
+      color: $footer-link;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+  }
+}
+
+// Accessibility
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+  .premium-footer::before {
+    animation: none !important;
+  }
+}
+
+// Print styles
+@media print {
+  .premium-footer {
+    background-color: white;
+    color: black;
+    
+    a {
+      color: black;
+      text-decoration: underline;
+    }
+  }
+}
+
+// Add these mobile-specific styles
+@media (max-width: 600px) {
+  .premium-footer {
+    padding-top: 2rem;
+
+    .footer-top .container {
+      padding: 0 1.25rem;
+    }
+
+    .social-links {
+      margin-top: 2rem;
+    }
+
+    .make-in-india-logo {
+      max-width: 100px;
+    }
+    
+    .footer-bottom {
+      padding: 1.5rem 0;
+      
+      .copyright, .credits {
+        font-size: 0.875rem;
+      }
+    }
+  }
+}
+
+// Large screen optimizations
+@media (min-width: 1400px) {
+  .premium-footer {
+    .container {
+      padding: 0 3rem;
+    }
+    
+    .company-info .company-description {
+      font-size: 1.05rem;
+    }
+  }
+}
+
+// Add smooth scroll for iOS
+html {
+  -webkit-overflow-scrolling: touch;
+}
+
+// Prevent body scroll when mobile menu is open
+body.mobile-menu-open {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
