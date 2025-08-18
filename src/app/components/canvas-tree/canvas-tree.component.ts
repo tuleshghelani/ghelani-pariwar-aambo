@@ -2,6 +2,18 @@ import { Component, ElementRef, Input, OnInit, ViewChild, AfterViewInit, HostLis
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Person } from '../../models/person.model';
 
+// Enhanced layout configuration interface
+interface EnhancedLayoutConfig {
+  minHorizontalSpacing: number;
+  maxHorizontalSpacing: number;
+  verticalSpacing: number;
+  nodeWidth: number;
+  nodeHeight: number;
+  adaptiveSpacing: boolean;
+  connectionLineBuffer: number;
+  levelBasedSpacing: Map<number, number>;
+}
+
 @Component({
   selector: 'app-canvas-tree',
   standalone: true,
@@ -28,6 +40,25 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
   private readonly horizontalSpacing: number = 50;
   private readonly verticalSpacing: number = 80;
   private readonly cornerRadius: number = 8;
+  
+  // Adaptive spacing properties for dynamic spacing configuration
+  private readonly minHorizontalSpacing: number = 30;
+  private readonly maxHorizontalSpacing: number = 80;
+  private readonly adaptiveSpacing: boolean = true;
+  private readonly connectionLineBuffer: number = 10;
+  private levelNodeCounts: Map<number, number> = new Map();
+  
+  // Enhanced layout configuration
+  private layoutConfig: EnhancedLayoutConfig = {
+    minHorizontalSpacing: this.minHorizontalSpacing,
+    maxHorizontalSpacing: this.maxHorizontalSpacing,
+    verticalSpacing: this.verticalSpacing,
+    nodeWidth: this.nodeWidth,
+    nodeHeight: this.nodeHeight,
+    adaptiveSpacing: this.adaptiveSpacing,
+    connectionLineBuffer: this.connectionLineBuffer,
+    levelBasedSpacing: new Map<number, number>()
+  };
   
   // Colors
   private readonly rootNodeColor: string = '#f5f7fa';
@@ -323,14 +354,19 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
     const levelWidths = new Map<number, number>();
     const levelCounts = new Map<number, number>();
     
+    // Reset levelNodeCounts for tracking nodes per level for spacing calculations
+    this.levelNodeCounts.clear();
+    
     // Calculate width needed for each level
     const calculateLevelWidths = (node: Person, level: number): void => {
       if (!levelCounts.has(level)) {
         levelCounts.set(level, 0);
         levelWidths.set(level, 0);
+        this.levelNodeCounts.set(level, 0);
       }
       
       levelCounts.set(level, levelCounts.get(level)! + 1);
+      this.levelNodeCounts.set(level, this.levelNodeCounts.get(level)! + 1);
       
       if (node.children && node.children.length > 0) {
         node.children.forEach(child => calculateLevelWidths(child, level + 1));
@@ -459,6 +495,48 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit {
     return Math.max(this.nodeWidth, childrenWidth);
   }
   
+  /**
+   * Calculate optimal horizontal spacing based on tree width and canvas dimensions
+   * Adjusts spacing dynamically for different tree depths to prevent overlapping
+   * @param level - The current tree level (0 = root)
+   * @param nodeCount - Number of nodes at this level
+   * @returns Calculated spacing value between nodes
+   */
+  private calculateAdaptiveSpacing(level: number, nodeCount: number): number {
+    if (!this.adaptiveSpacing || nodeCount <= 1) {
+      return this.horizontalSpacing;
+    }
+
+    const canvas = this.canvasRef.nativeElement;
+    const availableWidth = canvas.width / this.scale;
+    
+    // Calculate total width needed for nodes at this level
+    const totalNodeWidth = nodeCount * this.nodeWidth;
+    
+    // Calculate available space for spacing
+    const availableSpacingWidth = availableWidth - totalNodeWidth;
+    
+    // Calculate base spacing (space between nodes)
+    const spacingSlots = Math.max(1, nodeCount - 1);
+    let baseSpacing = Math.max(0, availableSpacingWidth / spacingSlots);
+    
+    // Apply level-based adjustments for deeper trees
+    // Deeper levels get progressively tighter spacing to fit more content
+    const levelAdjustmentFactor = Math.max(0.5, 1 - (level * 0.1));
+    baseSpacing *= levelAdjustmentFactor;
+    
+    // Ensure spacing stays within configured bounds
+    const calculatedSpacing = Math.max(
+      this.minHorizontalSpacing,
+      Math.min(this.maxHorizontalSpacing, baseSpacing)
+    );
+    
+    // Store level-specific spacing for future reference
+    this.layoutConfig.levelBasedSpacing.set(level, calculatedSpacing);
+    
+    return calculatedSpacing;
+  }
+
   private roundRect(x: number, y: number, width: number, height: number, radius: number): void {
     this.ctx.beginPath();
     this.ctx.moveTo(x + radius, y);
