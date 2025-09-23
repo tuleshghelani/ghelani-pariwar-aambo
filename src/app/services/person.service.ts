@@ -80,8 +80,16 @@ export class PersonService {
                           id: 'naranbhai',
                           name: 'Naranbhai',
                           children: [
-                            { id: 'kalpeshbhai', name: 'Kalpeshbhai' },
-                            { id: 'dilipbhai', name: 'Dilipbhai' }
+                            { id: 'kalpeshbhai', name: 'Kalpeshbhai',
+                              children: [
+                                { id: 'jashbhai', name: 'Jashbhai' }
+                              ]
+                             },
+                            { id: 'dilipbhai', name: 'Dilipbhai',
+                              children: [
+                                { id: 'Shivanshbhai', name: 'Shivanshbhai' }
+                              ]
+                             }
                           ]
                         },
                       ]
