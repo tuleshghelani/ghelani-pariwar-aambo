@@ -14,110 +14,113 @@ export class PersonService {
    * @returns Observable of Person data with parent-child relationships
    */
   getPersonHierarchy(): Observable<Person> {
-    // Create the hierarchical data structure as specified
+    // Create the hierarchical data structure from the provided family tree
     const personData: Person = {
-      id: 'Person101',
-      name: 'Person101',
+      id: 'govindbhai',
+      name: 'Govindbhai',
       children: [
         {
-          id: 'Person201',
-          name: 'Person201',
+          id: 'kanabhai',
+          name: 'Kanabhai',
           children: [
             {
-              id: 'Person301',
-              name: 'Person301',
+              id: 'savajibhai',
+              name: 'Savajibhai',
               children: [
                 {
-                  id: 'Person401',
-                  name: 'Person401',
+                  id: 'gopalbhai',
+                  name: 'Gopalbhai',
                   children: [
                     {
-                      id: 'Person501',
-                      name: 'Person501',
+                      id: 'jasmatbhai',
+                      name: 'Jasmatbhai',
                       children: [
-                        { id: 'Person601', name: 'Person601' },
-                        { id: 'Person602', name: 'Person602' },
-                        { id: 'Person603', name: 'Person603' }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  id: 'Person402',
-                  name: 'Person402',
-                  children: [
-                    {
-                      id: 'Person502',
-                      name: 'Person502',
-                      children: [
-                        { id: 'Person604', name: 'Person604' },
-                        { id: 'Person605', name: 'Person605' },
-                        { id: 'Person606', name: 'Person606' }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  id: 'Person403',
-                  name: 'Person403',
-                  children: [
-                    {
-                      id: 'Person503',
-                      name: 'Person503',
-                      children: [
-                        { id: 'Person607', name: 'Person607' },
-                        { id: 'Person608', name: 'Person608' },
-                        { id: 'Person609', name: 'Person609' }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              id: 'Person302',
-              name: 'Person302',
-              children: [
-                {
-                  id: 'Person404',
-                  name: 'Person404',
-                  children: [
-                    {
-                      id: 'Person504',
-                      name: 'Person504',
-                      children: [
-                        { id: 'Person610', name: 'Person610' }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  id: 'Person405',
-                  name: 'Person405',
-                  children: [
-                    {
-                      id: 'Person505',
-                      name: 'Person505',
-                      children: [
-                        { id: 'Person611', name: 'Person611' },
-                        { id: 'Person612', name: 'Person612' }
+                        {
+                          id: 'karsanbhai',
+                          name: 'Karsanbhai',
+                          children: [
+                            {
+                              id: 'vitthalbhai',
+                              name: 'Vitthalbhai',
+                              children: [
+                                { id: 'kaushikbhai', name: 'Kaushikbhai' },
+                                { id: 'rajubhai', name: 'Rajubhai' }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          id: 'ghusabhai',
+                          name: 'Ghusabhai',
+                          children: [
+                            {
+                              id: 'rameshbhai',
+                              name: 'Rameshbhai',
+                              children: [
+                                { id: 'tulesh', name: 'Tulesh' }
+                              ]
+                            },
+                            {
+                              id: 'parsottambhai',
+                              name: 'Parsottambhai',
+                              children: [
+                                { id: 'vikesh', name: 'Vikesh' }
+                              ]
+                            }
+                          ]
+                        },
                       ]
                     },
                     {
-                      id: 'Person506',
-                      name: 'Person506',
+                      id: 'kababhai',
+                      name: 'Kababhai',
                       children: [
-                        { id: 'Person613', name: 'Person613' },
-                        { id: 'Person614', name: 'Person614' }
+                        {
+                          id: 'nanajibhai',
+                          name: 'Nanajibhai',
+                          children: [
+                            {
+                              id: 'raghubhai',
+                              name: 'Raghubhai',
+                              children: [
+                                { id: 'jigneshbhai', name: 'Jigneshbhai' },
+                                { id: 'vipulbhai', name: 'Vipulbhai' }
+                              ]
+                            },
+                            {
+                              id: 'sureshbhai',
+                              name: 'Sureshbhai',
+                              children: [
+                                { id: 'sagarbhai', name: 'Sagarbhai' }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          id: 'ramjibhai',
+                          name: 'Ramjibhai',
+                          children: [
+                            {
+                              id: 'jyedrabhai',
+                              name: 'Jyedrabhai',
+                              children: [
+                                { id: 'harsh', name: 'Harsh' }
+                              ]
+                            },
+                            {
+                              id: 'mukeshbhai',
+                              name: 'Mukeshbhai',
+                              children: [
+                                { id: 'deep', name: 'Deep' }
+                              ]
+                            }
+                          ]
+                        }
                       ]
                     }
                   ]
                 }
               ]
-            },
-            {
-              id: 'Person303',
-              name: 'Person303'
             }
           ]
         }

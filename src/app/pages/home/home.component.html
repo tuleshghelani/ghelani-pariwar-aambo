@@ -29,19 +29,19 @@
   </div>
   
   <!-- Original Vertical Tree view (kept for reference) -->
-  <div *ngIf="!loading && !error && personData" class="tree-view vertical-tree">
+  <!-- <div *ngIf="!loading && !error && personData" class="tree-view vertical-tree">
     <h2>Traditional Family Tree View</h2>
-    <div class="tree-wrapper">
+    <div class="tree-wrapper"> -->
       <!-- Root node -->
-      <div class="tree-level root-level">
+      <!-- <div class="tree-level root-level">
         <div class="person-node root-node">
           <span class="person-id">{{ personData.id }}</span>
           <span class="person-name">{{ personData.name }}</span>
         </div>
-      </div>
+      </div> -->
       
       <!-- Recursive tree structure -->
-      <ng-container *ngIf="personData.children && personData.children.length > 0">
+      <!-- <ng-container *ngIf="personData.children && personData.children.length > 0">
         <div class="connector-wrapper root-connector">
           <div class="connector-line vertical"></div>
         </div>
@@ -51,7 +51,7 @@
       </ng-container>
     </div>
   </div>
-</div>
+</div> -->
 
 <!-- Template for recursive rendering of children levels -->
 <ng-template #childrenLevelTemplate let-children let-level="level">
