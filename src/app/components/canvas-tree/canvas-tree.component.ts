@@ -39,8 +39,13 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
   private ctx!: CanvasRenderingContext2D;
   private animationFrameId: number | null = null;
   private isDragging = false;
+  private isTouchDragging = false;
   private lastMouseX = 0;
   private lastMouseY = 0;
+  private pinchStartDistance = 0;
+  private pinchStartZoom = 1;
+  private pinchCenterX = 0;
+  private pinchCenterY = 0;
   zoom = 1;
   private minZoom = 0.1;
   private maxZoom = 3;
@@ -292,6 +297,10 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
     this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
     this.canvas.addEventListener('wheel', this.onWheel.bind(this));
     this.canvas.addEventListener('click', this.onClick.bind(this));
+    // Touch events for mobile
+    this.canvas.addEventListener('touchstart', this.onTouchStart.bind(this), { passive: false } as AddEventListenerOptions);
+    this.canvas.addEventListener('touchmove', this.onTouchMove.bind(this), { passive: false } as AddEventListenerOptions);
+    this.canvas.addEventListener('touchend', this.onTouchEnd.bind(this));
     
     window.addEventListener('resize', this.onResize.bind(this));
   }
@@ -331,6 +340,60 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
   private onMouseUp(): void {
     this.isDragging = false;
     this.canvas.style.cursor = 'grab';
+  }
+
+  // Touch support
+  private onTouchStart(event: TouchEvent): void {
+    if (event.touches.length === 1) {
+      // One finger: start panning
+      this.isTouchDragging = true;
+      this.lastMouseX = event.touches[0].clientX;
+      this.lastMouseY = event.touches[0].clientY;
+    } else if (event.touches.length === 2) {
+      // Two fingers: start pinch zoom
+      event.preventDefault();
+      const [t1, t2] = [event.touches[0], event.touches[1]];
+      this.pinchStartDistance = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      this.pinchStartZoom = this.zoom;
+      this.pinchCenterX = (t1.clientX + t2.clientX) / 2;
+      this.pinchCenterY = (t1.clientY + t2.clientY) / 2;
+    }
+  }
+
+  private onTouchMove(event: TouchEvent): void {
+    if (event.touches.length === 1 && this.isTouchDragging) {
+      event.preventDefault();
+      const touch = event.touches[0];
+      const deltaX = touch.clientX - this.lastMouseX;
+      const deltaY = touch.clientY - this.lastMouseY;
+      this.panX += deltaX;
+      this.panY += deltaY;
+      this.lastMouseX = touch.clientX;
+      this.lastMouseY = touch.clientY;
+      this.render();
+    } else if (event.touches.length === 2) {
+      // Pinch zoom
+      event.preventDefault();
+      const [t1, t2] = [event.touches[0], event.touches[1]];
+      const newDistance = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      if (this.pinchStartDistance > 0) {
+        const scale = newDistance / this.pinchStartDistance;
+        const targetZoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.pinchStartZoom * scale));
+        const rect = this.canvas.getBoundingClientRect();
+        const centerX = this.pinchCenterX - rect.left;
+        const centerY = this.pinchCenterY - rect.top;
+        const zoomRatio = targetZoom / this.zoom;
+        this.panX = centerX - (centerX - this.panX) * zoomRatio;
+        this.panY = centerY - (centerY - this.panY) * zoomRatio;
+        this.zoom = targetZoom;
+        this.render();
+      }
+    }
+  }
+
+  private onTouchEnd(): void {
+    this.isTouchDragging = false;
+    this.pinchStartDistance = 0;
   }
 
   private onWheel(event: WheelEvent): void {
@@ -398,6 +461,9 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
     
     if (isPlatformBrowser(this.platformId)) {
       window.removeEventListener('resize', this.onResize.bind(this));
+      this.canvas.removeEventListener('touchstart', this.onTouchStart as any);
+      this.canvas.removeEventListener('touchmove', this.onTouchMove as any);
+      this.canvas.removeEventListener('touchend', this.onTouchEnd as any);
     }
   }
 
