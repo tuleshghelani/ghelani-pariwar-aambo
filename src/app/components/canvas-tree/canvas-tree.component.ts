@@ -62,7 +62,7 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
   private canvasHeight = 0;
 
   // Layout configuration
-  private readonly layoutConfig: TreeLayoutConfig = {
+  private layoutConfig: TreeLayoutConfig = {
     nodeWidth: 120,
     nodeHeight: 60,
     levelSpacing: 120,
@@ -90,6 +90,19 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
 
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId)) {
+      // Adjust node sizes for small screens
+      if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
+        this.layoutConfig = {
+          ...this.layoutConfig,
+          nodeWidth: 150,
+          nodeHeight: 72,
+          levelSpacing: 140,
+          siblingSpacing: 180
+        };
+        if (this.personData) {
+          this.buildTreeStructure();
+        }
+      }
       this.initializeCanvas();
       this.setupEventListeners();
       this.render();
