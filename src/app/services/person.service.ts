@@ -43,14 +43,14 @@ export class PersonService {
                               id: 'madhabhai',
                               name: 'Madhabhai',
                               children: [
-                                { id: 'akshay', name: 'Akshay' }
+                                { id: 'akshaybhai', name: 'Akshaybhai' }
                               ]
                             },
                             {
                               id: 'rameshbhai',
                               name: 'Rameshbhai',
                               children: [
-                                { id: 'abhay', name: 'Abhay' }
+                                { id: 'abhaybhai', name: 'Abhaybhai' }
                               ]
                             },
                             { id: 'sureshbhai', name: 'Sureshbhai' }
@@ -120,14 +120,14 @@ export class PersonService {
                               id: 'rameshbhai',
                               name: 'Rameshbhai',
                               children: [
-                                { id: 'tulesh', name: 'Tulesh' }
+                                { id: 'tuleshbhai', name: 'Tuleshbhai' }
                               ]
                             },
                             {
                               id: 'parsottambhai',
                               name: 'Parsottambhai',
                               children: [
-                                { id: 'vikesh', name: 'Vikesh' }
+                                { id: 'vikeshbhai', name: 'Vikeshbhai' }
                               ]
                             }
                           ]
@@ -167,14 +167,14 @@ export class PersonService {
                               id: 'jyedrabhai',
                               name: 'Jyedrabhai',
                               children: [
-                                { id: 'harsh', name: 'Harsh' }
+                                { id: 'harshbhai', name: 'Harshbhai' }
                               ]
                             },
                             {
                               id: 'mukeshbhai',
                               name: 'Mukeshbhai',
                               children: [
-                                { id: 'deep', name: 'Deep' }
+                                { id: 'deepbhai', name: 'Deepbhai' }
                               ]
                             }
                           ]
