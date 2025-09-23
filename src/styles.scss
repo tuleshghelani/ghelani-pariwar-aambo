@@ -4,79 +4,33 @@
 @import 'styles/effects';
 @import 'styles/typography';
 @import './styles/fix-layout.scss';
-$font-family-base: 'Roboto', sans-serif;
-// Primary Colors - Teal theme representing professionalism, creativity, and trust
-$primary: #DC1E24;      // Main brand red
-$primary-light: #ff4d4d; // Lighter red
-$primary-lighter: #ff7575; // Even lighter red
-$primary-lightest: #ffa3a3; // Lightest red
-$primary-dark: #b30000;  // Darker red
 
-$secondary: #2c3e50;     // Deep blue-gray
-$secondary-light: #34495e; // Lighter blue-gray
-$secondary-lighter: #4a6278; // Even lighter blue-gray
-$secondary-lightest: #7f8c8d; // Lightest blue-gray
-$secondary-dark: #1a252f; // Darker blue-gray
+/* Theme variables (CSS custom properties) */
+:root {
+  --primary-color: #17a3de;
+  --primary-color-light: rgba(23, 163, 222, 0.5);
+  --text-color: #4a4a4a;
+  --background-color: #e1e1e3;
+  --secondary-color: #d4d4d8;
+  --accent-color: #a1a1a6;
+  --white-color: #ffffff;
 
-// Neutral Colors - Professional grays with subtle teal undertones
-$neutral-dark: #414544;
-$neutral-medium: #909695;
-$neutral-light: #c2c7c6;
-$neutral-lighter: #e2e6e5;
-$neutral-lightest: #f5f7f7;
+  /* Typography */
+  --font-primary: 'Outfit', sans-serif;
+  --font-secondary: 'Quicksand', sans-serif;
 
-// Additional Professional Colors
-$accent: #2c4e50; // Deep teal-gray for text and accents
-$success: #27ae60; // Success states
-$warning: #f39c12; // Warning states
-$error: #e74c3c; // Error states
-$info: #34b7db; // Information states - teal-leaning blue
-
-// Background Colors
-$background-primary: #ffffff;
-$background-secondary: #f8f9fa;
-$background-tertiary: #f0f5f5;
-
-// Text Colors
-$text-primary: $accent;
-$text-secondary: $neutral-dark;
-$text-light: $neutral-medium;
-$text-white: #ffffff;
-
-// Border Colors
-$border-light: $neutral-lighter;
-$border-medium: $neutral-medium;
-$border-dark: $neutral-dark;
-
-// Shadow Colors
-$shadow-color: rgba(0, 0, 0, 0.1);
-$shadow-color-dark: rgba(0, 0, 0, 0.2);
-
-// Export variables for use in components
-:export {
-  primary: $primary;
-  primaryLight: $primary-light;
-  primaryLighter: $primary-lighter;
-  primaryLightest: $primary-lightest;
-  secondary: $secondary;
-  secondaryLight: $secondary-light;
-  secondaryLighter: $secondary-lighter;
-  secondaryLightest: $secondary-lightest;
-  neutralDark: $neutral-dark;
-  neutralMedium: $neutral-medium;
-  neutralLight: $neutral-light;
-  neutralLighter: $neutral-lighter;
-  neutralLightest: $neutral-lightest;
+  /* Additional Colors */
+  --silver-light: #f5f5f7;
+  --silver-dark: #e1e1e3;
+  --gray-light: #d4d4d8;
+  --gray-dark: #a1a1a6;
 }
 
-// Global styles
+/* Global styles */
 body {
-  color: $text-primary;
-  background: $background-primary;
-  font-family: $font-body;
-  font-weight: $weight-regular;
-  font-size: $font-size-base;
-  line-height: $line-height-normal;
+  color: var(--text-color);
+  background: var(--background-color);
+  font-family: var(--font-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   &.mobile-menu-open {
@@ -89,8 +43,8 @@ body {
 
 // Typography
 h1, h2, h3, h4, h5, h6 {
-  color: $text-primary;
-  font-family: $font-primary;
+  color: var(--text-color);
+  font-family: var(--font-secondary);
   font-weight: $weight-bold;
   line-height: $line-height-tight;
   letter-spacing: $letter-spacing-tight;
@@ -123,21 +77,21 @@ h6 {
 }
 
 a {
-  color: $primary;
+  color: var(--primary-color);
   font-weight: $weight-medium;
   text-decoration: none;
   transition: color 0.3s ease;
   
   &:hover {
-    color: $primary-light;
+    color: var(--primary-color-light);
   }
 }
 
 // Utility classes
-.text-primary { color: $primary; }
-.text-secondary { color: $secondary; }
-.bg-primary { background-color: $primary; }
-.bg-secondary { background-color: $secondary; }
+.text-primary { color: var(--primary-color); }
+.text-secondary { color: var(--text-color); }
+.bg-primary { background-color: var(--primary-color); }
+.bg-secondary { background-color: var(--secondary-color); }
 .text-uppercase { text-transform: uppercase; }
 .text-bold { font-weight: $weight-bold; }
 .text-semibold { font-weight: $weight-semibold; }

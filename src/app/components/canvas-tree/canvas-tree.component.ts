@@ -199,7 +199,9 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
   }
 
   private renderConnections(): void {
-    this.ctx.strokeStyle = '#DC1E24';
+    // use theme primary color
+    const primary = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#17a3de';
+    this.ctx.strokeStyle = primary;
     this.ctx.lineWidth = 2;
     this.ctx.lineCap = 'round';
 
@@ -234,18 +236,24 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
     const width = node.width;
     const height = node.height;
 
+    // Read theme colors
+    const primary = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#17a3de';
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#a1a1a6';
+    const white = getComputedStyle(document.documentElement).getPropertyValue('--white-color').trim() || '#ffffff';
+    const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#4a4a4a';
+
     // Node background
-    this.ctx.fillStyle = this.getNodeColor(node);
+    this.ctx.fillStyle = this.getNodeColor(node, primary);
     this.ctx.fillRect(x, y, width, height);
 
     // Node border
-    this.ctx.strokeStyle = this.getNodeBorderColor(node);
+    this.ctx.strokeStyle = this.getNodeBorderColor(node, accent, primary);
     this.ctx.lineWidth = 2;
     this.ctx.strokeRect(x, y, width, height);
 
     // Node text
-    this.ctx.fillStyle = '#ffffff';
-    this.ctx.font = 'bold 12px Roboto, sans-serif';
+    this.ctx.fillStyle = white;
+    this.ctx.font = `bold 12px ${getComputedStyle(document.documentElement).getPropertyValue('--font-primary').trim() || 'Outfit, sans-serif'}`;
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
 
@@ -259,21 +267,21 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
     });
 
     // Level indicator
-    this.ctx.fillStyle = '#2c3e50';
-    this.ctx.font = '10px Roboto, sans-serif';
-    this.ctx.fillText(`Level ${node.level}`, x + width / 2, y + height - 8);
+    this.ctx.fillStyle = textColor;
+    this.ctx.font = `10px ${getComputedStyle(document.documentElement).getPropertyValue('--font-secondary').trim() || 'Quicksand, sans-serif'}`;
+    // this.ctx.fillText(`Level ${node.level}`, x + width / 2, y + height - 8);
   }
 
-  private getNodeColor(node: TreeNode): string {
-    if (node.isRoot) return '#DC1E24';
-    if (node.isLeaf) return '#27ae60';
-    return '#3498db';
+  private getNodeColor(node: TreeNode, primary: string): string {
+    if (node.isRoot) return primary;
+    if (node.isLeaf) return 'rgba(23, 163, 222, 0.7)';
+    return 'rgba(23, 163, 222, 0.5)';
   }
 
-  private getNodeBorderColor(node: TreeNode): string {
-    if (node === this.hoveredNode) return '#f39c12';
-    if (node === this.selectedNode) return '#e74c3c';
-    return '#2c3e50';
+  private getNodeBorderColor(node: TreeNode, accent: string, primary: string): string {
+    if (node === this.hoveredNode) return accent;
+    if (node === this.selectedNode) return primary;
+    return accent;
   }
 
   private setupEventListeners(): void {
