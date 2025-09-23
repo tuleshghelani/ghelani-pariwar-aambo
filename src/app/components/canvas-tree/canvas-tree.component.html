@@ -1,35 +1,82 @@
-<div class="canvas-tree-container">
-  <div class="canvas-controls">
-    <button class="zoom-button" (click)="zoomIn()" title="Zoom In">+</button>
-    <button class="zoom-button" (click)="zoomOut()" title="Zoom Out">-</button>
-    <button class="zoom-button" (click)="resetView()" title="Reset View">↺</button>
+<div class="canvas-tree-container" #container>
+  <!-- Canvas Tree Controls -->
+  <div class="tree-controls">
+    <div class="control-group">
+      <button 
+        class="control-btn zoom-in" 
+        (click)="zoomIn()" 
+        title="Zoom In"
+        aria-label="Zoom in">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+        </svg>
+      </button>
+      
+      <button 
+        class="control-btn zoom-out" 
+        (click)="zoomOut()" 
+        title="Zoom Out"
+        aria-label="Zoom out">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 13H5v-2h14v2z"/>
+        </svg>
+      </button>
+      
+      <button 
+        class="control-btn reset-zoom" 
+        (click)="resetZoom()" 
+        title="Reset Zoom"
+        aria-label="Reset zoom to default">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+      </button>
+      
+      <button 
+        class="control-btn fit-screen" 
+        (click)="fitToScreen()" 
+        title="Fit to Screen"
+        aria-label="Fit tree to screen">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v8H8V8z"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="zoom-info">
+      <span class="zoom-level">{{ (zoom * 100) | number:'1.0-0' }}%</span>
+    </div>
   </div>
 
-  <div class="canvas-wrapper">
-    <canvas #treeCanvas></canvas>
-  </div>
+  <!-- Canvas Element -->
+  <canvas 
+    #canvas
+    class="tree-canvas"
+    [attr.aria-label]="'Interactive family tree with ' + (personData?.name || 'family members')"
+    role="img">
+  </canvas>
 
-  <!-- SEO-friendly hidden content -->
-  <div class="seo-content" aria-hidden="true" *ngIf="personData">
-    <h2>Ambo/Vansh Vela Family Hierarchy</h2>
-    <p>This family tree represents the hierarchical structure of the Ambo/Vansh Vela family, showing parent-child
-      relationships.</p>
-    <ng-container *ngTemplateOutlet="seoTemplate; context: { $implicit: personData }"></ng-container>
+  <!-- Instructions -->
+  <div class="tree-instructions">
+    <div class="instruction-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+      </svg>
+      <span>Mouse wheel to zoom</span>
+    </div>
+    
+    <div class="instruction-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+      </svg>
+      <span>Drag to pan</span>
+    </div>
+    
+    <div class="instruction-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+      </svg>
+      <span>Click nodes to select</span>
+    </div>
   </div>
 </div>
-
-<!-- SEO template -->
-<ng-template #seoTemplate let-person>
-  <div class="seo-person">
-    <h3>{{ person.name }}</h3>
-    <ng-container *ngIf="person.children && person.children.length > 0">
-      <p>Children:</p>
-      <ul>
-        <li *ngFor="let child of person.children">
-          {{ child.name }}
-          <ng-container *ngTemplateOutlet="seoTemplate; context: { $implicit: child }"></ng-container>
-        </li>
-      </ul>
-    </ng-container>
-  </div>
-</ng-template>

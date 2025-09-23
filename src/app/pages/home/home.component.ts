@@ -1,6 +1,5 @@
 import { Component, OnInit, inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import Aos from 'aos';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -12,7 +11,7 @@ import { CanvasTreeComponent } from '../../components/canvas-tree/canvas-tree.co
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, CanvasTreeComponent],
+  imports: [CommonModule, CanvasTreeComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
@@ -32,7 +31,7 @@ export class HomeComponent implements OnInit {
   ) {
     this.setupSEO();
   }
-
+  
   private setupSEO() {
     this.title.setTitle('Family Tree View - Ambo/Vansh Vela');
     this.meta.updateTag({ name: 'description', content: 'Hierarchical tree view of Ambo/Vansh Vela family relationships' });

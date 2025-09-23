@@ -43,6 +43,11 @@
   
   .tree-view-section {
     margin-bottom: 3rem;
+    
+    app-canvas-tree {
+      display: block;
+      margin-top: 1rem;
+    }
   }
 }
 
