@@ -28,9 +28,64 @@ export class PersonService {
               name: 'Savajibhai',
               children: [
                 {
-                  id: 'gopalbhai',
-                  name: 'Gopalbhai',
+                  id: 'gopabhai',
+                  name: 'Gopabhai',
                   children: [
+                    {
+                      id: 'dayabhai',
+                      name: 'Dayabhai',
+                      children: [
+                        {
+                          id: 'nathabhai',
+                          name: 'Nathabhai',
+                          children: [
+                            {
+                              id: 'madhabhai',
+                              name: 'Madhabhai',
+                              children: [
+                                { id: 'akshay', name: 'Akshay' }
+                              ]
+                            },
+                            {
+                              id: 'rameshbhai',
+                              name: 'Rameshbhai',
+                              children: [
+                                { id: 'abhay', name: 'Abhay' }
+                              ]
+                            },
+                            { id: 'sureshbhai', name: 'Sureshbhai' }
+                          ]
+                        },
+                        {
+                          id: 'lavajibhai',
+                          name: 'Lavajibhai',
+                          children: [
+                            {
+                              id: 'nileshbhai',
+                              name: 'Nileshbhai',
+                              children: [
+                                { id: 'harshbhai', name: 'Harshbhai' }
+                              ]
+                            },
+                            {
+                              id: 'rajeshbhai',
+                              name: 'Rajeshbhai',
+                              children: [
+                                { id: 'ridhambhai', name: 'Ridhambhai' }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          id: 'naranbhai',
+                          name: 'Naranbhai',
+                          children: [
+                            { id: 'kalpeshbhai', name: 'Kalpeshbhai' },
+                            { id: 'dilipbhai', name: 'Dilipbhai' }
+                          ]
+                        },
+                      ]
+                    },
                     {
                       id: 'jasmatbhai',
                       name: 'Jasmatbhai',
