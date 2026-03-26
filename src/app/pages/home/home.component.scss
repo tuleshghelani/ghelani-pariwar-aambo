@@ -1,7 +1,8 @@
 .tree-view-container {
   padding: 2rem;
   font-family: 'Arial', sans-serif;
-  max-width: 1200px;
+  max-width: 1600px; /* Increased for a much larger default view */
+  width: 95%;
   margin: 0 auto;
   
   h1 {

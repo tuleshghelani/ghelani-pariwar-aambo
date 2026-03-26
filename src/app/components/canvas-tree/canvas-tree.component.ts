@@ -47,6 +47,9 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
   private pinchCenterX = 0;
   private pinchCenterY = 0;
   zoom = 1;
+  isFullscreen = false;
+  isMenuOpen = true;
+  private menuTimeoutId: any;
   private minZoom = 0.1;
   private maxZoom = 3;
   private panX = 0;
@@ -106,6 +109,7 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
       this.initializeCanvas();
       this.setupEventListeners();
       this.render();
+      this.resetMenuTimeout(); // Auto-close menu after 3 seconds initially
     }
   }
 
@@ -316,6 +320,13 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
     this.canvas.addEventListener('touchend', this.onTouchEnd.bind(this));
     
     window.addEventListener('resize', this.onResize.bind(this));
+    document.addEventListener('keydown', this.onKeyDown.bind(this));
+  }
+
+  private onKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.isFullscreen) {
+      this.toggleFullscreen();
+    }
   }
 
   private onMouseDown(event: MouseEvent): void {
@@ -473,10 +484,12 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
     }
     
     if (isPlatformBrowser(this.platformId)) {
+      this.clearMenuTimeout();
       window.removeEventListener('resize', this.onResize.bind(this));
       this.canvas.removeEventListener('touchstart', this.onTouchStart as any);
       this.canvas.removeEventListener('touchmove', this.onTouchMove as any);
       this.canvas.removeEventListener('touchend', this.onTouchEnd as any);
+      document.removeEventListener('keydown', this.onKeyDown.bind(this));
     }
   }
 
@@ -505,6 +518,23 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
     this.render();
   }
 
+  toggleFullscreen(): void {
+    this.isFullscreen = !this.isFullscreen;
+    
+    // Prevent background scrolling when in fullscreen mode
+    if (this.isFullscreen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    // Allow DOM to update before resizing canvas
+    setTimeout(() => {
+      this.updateCanvasSize();
+      this.fitToScreen();
+    }, 50);
+  }
+
   fitToScreen(): void {
     if (this.treeNodes.length === 0 || !this.treeBounds) return;
     
@@ -513,5 +543,32 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
     
     this.centerTree();
     this.render();
+  }
+
+  // Menu control methods
+  toggleMenu(): void {
+    this.isMenuOpen = !this.isMenuOpen;
+    if (this.isMenuOpen) {
+      this.resetMenuTimeout();
+    } else {
+      this.clearMenuTimeout();
+    }
+  }
+
+  resetMenuTimeout(): void {
+    this.clearMenuTimeout();
+    if (this.isMenuOpen) {
+      this.menuTimeoutId = setTimeout(() => {
+        this.isMenuOpen = false;
+        this.cdr.detectChanges();
+      }, 3000);
+    }
+  }
+
+  clearMenuTimeout(): void {
+    if (this.menuTimeoutId) {
+      clearTimeout(this.menuTimeoutId);
+      this.menuTimeoutId = null;
+    }
   }
 }
