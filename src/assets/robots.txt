@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://aamboaambo.com/sitemap.xml 
