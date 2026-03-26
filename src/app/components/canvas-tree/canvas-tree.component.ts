@@ -32,6 +32,7 @@ export interface TreeConnection {
 })
 export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @Input() personData: Person | null = null;
+  @Input() nodeShape: 'square' | 'mango' = 'square';
   @ViewChild('canvas', { static: false }) canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('container', { static: false }) containerRef!: ElementRef<HTMLDivElement>;
 
@@ -68,8 +69,8 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
   private layoutConfig: TreeLayoutConfig = {
     nodeWidth: 120,
     nodeHeight: 60,
-    levelSpacing: 120,
-    siblingSpacing: 150,
+    levelSpacing: 160, // Default larger spacing to handle mango
+    siblingSpacing: 160,
     minCanvasWidth: 800,
     minCanvasHeight: 600
   };
@@ -99,7 +100,7 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
           ...this.layoutConfig,
           nodeWidth: 150,
           nodeHeight: 72,
-          levelSpacing: 140,
+          levelSpacing: this.nodeShape === 'mango' ? 180 : 140,
           siblingSpacing: 180
         };
         if (this.personData) {
@@ -114,7 +115,20 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['personData'] && this.personData) {
+    let shouldRebuild = false;
+
+    if (changes['nodeShape']) {
+      // Update spacing based on shape
+      const isMobile = isPlatformBrowser(this.platformId) && window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+      this.layoutConfig.levelSpacing = this.nodeShape === 'mango' ? (isMobile ? 180 : 160) : (isMobile ? 140 : 120);
+      shouldRebuild = true;
+    }
+
+    if (changes['personData']) {
+      shouldRebuild = true;
+    }
+
+    if (shouldRebuild && this.personData) {
       this.buildTreeStructure();
       if (isPlatformBrowser(this.platformId) && this.canvas) {
         this.centerTree();
@@ -229,17 +243,39 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
 
     this.connections.forEach(connection => {
       this.ctx.beginPath();
-      this.ctx.moveTo(
-        connection.from.x + connection.from.width / 2,
-        connection.from.y + connection.from.height
-      );
       
-      const midY = (connection.from.y + connection.from.height + connection.to.y) / 2;
-      this.ctx.quadraticCurveTo(
-        connection.from.x + connection.from.width / 2,
-        midY,
-        connection.to.x + connection.to.width / 2,
-        connection.to.y
+      let startX: number, startY: number, endX: number, endY: number;
+
+      if (this.nodeShape === 'mango') {
+        const s = 0.70; // Scaled down matching the new smaller mango shape
+        const fromCx = connection.from.x + connection.from.width / 2;
+        const fromCy = connection.from.y + connection.from.height / 2;
+        const toCx = connection.to.x + connection.to.width / 2;
+        const toCy = connection.to.y + connection.to.height / 2;
+        
+        // Parent beak coordinates
+        startX = fromCx + 5 * s;
+        startY = fromCy + 90 * s;
+        
+        // Child stem coordinates
+        endX = toCx + 10 * s;
+        endY = toCy - 60 * s;
+      } else {
+        startX = connection.from.x + connection.from.width / 2;
+        startY = connection.from.y + connection.from.height;
+        endX = connection.to.x + connection.to.width / 2;
+        endY = connection.to.y;
+      }
+
+      this.ctx.moveTo(startX, startY);
+      
+      const midY = (startY + endY) / 2;
+      
+      // Use cubic bezier for perfect vertical entry/exit lines
+      this.ctx.bezierCurveTo(
+        startX, midY,
+        endX, midY,
+        endX, endY
       );
       
       this.ctx.stroke();
@@ -264,34 +300,169 @@ export class CanvasTreeComponent implements OnInit, AfterViewInit, OnDestroy, On
     const white = getComputedStyle(document.documentElement).getPropertyValue('--white-color').trim() || '#ffffff';
     const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim() || '#4a4a4a';
 
-    // Node background
-    this.ctx.fillStyle = this.getNodeColor(node, primary);
-    this.ctx.fillRect(x, y, width, height);
+    this.ctx.save();
 
-    // Node border
-    this.ctx.strokeStyle = this.getNodeBorderColor(node, accent, primary);
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeRect(x, y, width, height);
+    if (this.nodeShape === 'mango') {
+      this.drawMangoShape(x, y, width, height, node, primary, accent);
+    } else {
+      // Node background
+      this.ctx.fillStyle = this.getNodeColor(node, primary);
+      this.ctx.fillRect(x, y, width, height);
 
-    // Node text
-    this.ctx.fillStyle = white;
-    this.ctx.font = `bold 12px ${getComputedStyle(document.documentElement).getPropertyValue('--font-primary').trim() || 'Outfit, sans-serif'}`;
+      // Node border
+      this.ctx.strokeStyle = this.getNodeBorderColor(node, accent, primary);
+      this.ctx.lineWidth = 2;
+      this.ctx.strokeRect(x, y, width, height);
+    }
+
+    const fontSize = this.nodeShape === 'mango' ? '12px' : '13px'; // Slightly smaller font for smaller mango
+    this.ctx.font = `bold ${fontSize} ${getComputedStyle(document.documentElement).getPropertyValue('--font-primary').trim() || 'Outfit, sans-serif'}`;
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
 
     // Split long names
     const words = node.name.split(' ');
-    const lineHeight = 14;
-    const startY = y + height / 2 - (words.length - 1) * lineHeight / 2;
+    const lineHeight = this.nodeShape === 'mango' ? 14 : 16; // Tighter line height
+    const startY = y + height / 2 - (words.length - 1) * lineHeight / 2 + (this.nodeShape === 'mango' ? 2 : 0);
+
+    // Draw text background pill for mango to ensure overflow visibility
+    if (this.nodeShape === 'mango') {
+      let maxWordWidth = 0;
+      words.forEach(w => {
+        const wWidth = this.ctx.measureText(w).width;
+        if (wWidth > maxWordWidth) maxWordWidth = wWidth;
+      });
+      
+      const paddingX = 8;
+      const paddingY = 4;
+      const pillWidth = maxWordWidth + paddingX * 2;
+      const pillHeight = words.length * lineHeight + paddingY * 2 - (lineHeight - 12);
+      
+      const pillX = x + width / 2 - pillWidth / 2;
+      const pillY = startY - lineHeight / 2 - paddingY + 1;
+
+      this.ctx.save();
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.45)'; // Muted elegant dark overlay
+      this.ctx.shadowColor = 'transparent';
+      this.ctx.shadowBlur = 0;
+      
+      const r = 6;
+      this.ctx.beginPath();
+      this.ctx.moveTo(pillX + r, pillY);
+      this.ctx.lineTo(pillX + pillWidth - r, pillY);
+      this.ctx.quadraticCurveTo(pillX + pillWidth, pillY, pillX + pillWidth, pillY + r);
+      this.ctx.lineTo(pillX + pillWidth, pillY + pillHeight - r);
+      this.ctx.quadraticCurveTo(pillX + pillWidth, pillY + pillHeight, pillX + pillWidth - r, pillY + pillHeight);
+      this.ctx.lineTo(pillX + r, pillY + pillHeight);
+      this.ctx.quadraticCurveTo(pillX, pillY + pillHeight, pillX, pillY + pillHeight - r);
+      this.ctx.lineTo(pillX, pillY + r);
+      this.ctx.quadraticCurveTo(pillX, pillY, pillX + r, pillY);
+      this.ctx.closePath();
+      this.ctx.fill();
+      this.ctx.restore();
+
+      // Premium white text
+      this.ctx.fillStyle = '#ffffff'; 
+      this.ctx.shadowColor = 'rgba(0,0,0,0.8)';
+      this.ctx.shadowBlur = 3;
+      this.ctx.shadowOffsetX = 0;
+      this.ctx.shadowOffsetY = 1;
+    } else {
+      this.ctx.fillStyle = white;
+    }
 
     words.forEach((word, index) => {
       this.ctx.fillText(word, x + width / 2, startY + index * lineHeight);
     });
 
+    this.ctx.restore();
+
     // Level indicator
     this.ctx.fillStyle = textColor;
     this.ctx.font = `10px ${getComputedStyle(document.documentElement).getPropertyValue('--font-secondary').trim() || 'Quicksand, sans-serif'}`;
     // this.ctx.fillText(`Level ${node.level}`, x + width / 2, y + height - 8);
+  }
+
+  private drawMangoShape(x: number, y: number, width: number, height: number, node: TreeNode, primary: string, accent: string): void {
+    const isHovered = node === this.hoveredNode;
+    const isSelected = node === this.selectedNode;
+
+    this.ctx.save();
+    
+    // Center of the node
+    const cx = x + width / 2;
+    const cy = y + height / 2;
+    this.ctx.translate(cx, cy);
+
+    // Optimized size multiplier for graceful proportions without overlapping siblings
+    const s = 0.70; // Decreased to ensure safe spacing and readable lines
+
+    // Add a subtle drop shadow for premium look
+    this.ctx.shadowColor = 'rgba(0,0,0,0.25)';
+    this.ctx.shadowBlur = 12;
+    this.ctx.shadowOffsetY = 6;
+    this.ctx.shadowOffsetX = 3;
+
+    // Draw leaf
+    this.ctx.beginPath();
+    this.ctx.moveTo(10 * s, -60 * s); // stem connection
+    // Leaf curving top-left
+    this.ctx.bezierCurveTo(-5 * s, -75 * s, -30 * s, -80 * s, -40 * s, -60 * s);
+    this.ctx.bezierCurveTo(-25 * s, -55 * s, -10 * s, -55 * s, 10 * s, -60 * s);
+    this.ctx.fillStyle = isSelected ? '#33691E' : '#4CAF50'; // deep vivid green
+    this.ctx.fill();
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeStyle = '#1B5E20';
+    this.ctx.stroke();
+
+    // Draw mango body (Perfectly calculated C1-continuous Paisley/Mango shape)
+    this.ctx.beginPath();
+    this.ctx.moveTo(10 * s, -60 * s); // top stem area
+    
+    // Convex right cheek
+    this.ctx.bezierCurveTo(60 * s, -60 * s, 70 * s, -10 * s, 50 * s, 30 * s);
+    
+    // Concave right tuck dropping to the beak (S-curve)
+    this.ctx.bezierCurveTo(35 * s, 60 * s, 25 * s, 80 * s, 5 * s, 90 * s);
+    
+    // Bottom rounding of the beak (sharp but round tip)
+    this.ctx.bezierCurveTo(-10 * s, 95 * s, -25 * s, 85 * s, -25 * s, 70 * s);
+    
+    // C-curve left belly sweeping out and up massively
+    this.ctx.bezierCurveTo(-25 * s, 40 * s, -70 * s, 10 * s, -50 * s, -30 * s);
+    
+    // Top left shoulder back to stem
+    this.ctx.bezierCurveTo(-40 * s, -55 * s, -15 * s, -60 * s, 10 * s, -60 * s);
+    this.ctx.closePath();
+
+    // Create realistic mango gradient
+    // Center of gradient offset to upper-left belly to simulate 3D lighting
+    const gradient = this.ctx.createRadialGradient(-20 * s, -20 * s, 5 * s, 0, 0, 80 * s);
+    
+    if (isSelected || isHovered) {
+      gradient.addColorStop(0, '#EEFF41'); // bright lime highlight
+      gradient.addColorStop(0.15, '#FFF59D'); // light yellow
+      gradient.addColorStop(0.4, '#FFC107'); // yellow
+      gradient.addColorStop(0.7, '#e69925ff'); // orange
+      gradient.addColorStop(1, '#E65100'); // deep dark orange boundary
+    } else {
+      gradient.addColorStop(0, '#D4E157'); // lime green highlight
+      gradient.addColorStop(0.15, '#FFE082'); // light yellow
+      gradient.addColorStop(0.4, '#FFCA28'); // mango yellow
+      gradient.addColorStop(0.7, '#F57C00'); // orange
+      gradient.addColorStop(1, '#E65100'); // rich reddish/brown edge for depth
+    }
+
+    this.ctx.fillStyle = gradient;
+    this.ctx.fill();
+
+    // Border
+    this.ctx.strokeStyle = isSelected ? primary : (isHovered ? accent : '#E65100');
+    this.ctx.lineWidth = isSelected ? 3 : 1.5;
+    this.ctx.shadowColor = 'transparent'; // Remove shadow for stroke
+    this.ctx.stroke();
+
+    this.ctx.restore();
   }
 
   private getNodeColor(node: TreeNode, primary: string): string {

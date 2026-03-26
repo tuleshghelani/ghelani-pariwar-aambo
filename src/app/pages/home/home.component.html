@@ -25,7 +25,8 @@
     <h2>Interactive Family Tree</h2>
     <p class="tree-description">Use mouse wheel to zoom in/out, drag to pan, or use the controls in the top-right corner.</p>
     
-    <app-canvas-tree [personData]="personData"></app-canvas-tree>
+    <!-- Using nodeShape="mango" to display the highly requested mango shaped tree nodes -->
+    <app-canvas-tree [personData]="personData" nodeShape="mango"></app-canvas-tree>
   </div>
   
   <!-- Original Vertical Tree view (kept for reference) -->

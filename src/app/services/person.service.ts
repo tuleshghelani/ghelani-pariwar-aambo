@@ -106,8 +106,19 @@ export class PersonService {
                               id: 'vitthalbhai',
                               name: 'Vitthalbhai',
                               children: [
-                                { id: 'kaushikbhai', name: 'Kaushikbhai' },
-                                { id: 'rajubhai', name: 'Rajubhai' }
+                                { 
+                                  id: 'kaushikbhai', name: 'Kaushikbhai',
+                                  children: [
+                                    { id: 'Nakshbhai', name: 'Nakshbhai' },
+                                    { id: 'Devbhai', name: 'Devbhai' }
+                                  ]
+                                },
+                                { 
+                                  id: 'rajubhai', name: 'Rajubhai',
+                                  children: [
+                                    { id: 'Pranshubhai', name: 'Pranshubhai' }
+                                  ] 
+                                }
                               ]
                             }
                           ]
@@ -146,8 +157,18 @@ export class PersonService {
                               id: 'raghubhai',
                               name: 'Raghubhai',
                               children: [
-                                { id: 'jigneshbhai', name: 'Jigneshbhai' },
-                                { id: 'vipulbhai', name: 'Vipulbhai' }
+                                { 
+                                  id: 'jigneshbhai', name: 'Jigneshbhai',
+                                  children: [
+                                    { id: 'Rudrabhai', name: 'Rudrabhai' }
+                                  ]
+                                },
+                                { 
+                                  id: 'vipulbhai', name: 'Vipulbhai',
+                                  children: [
+                                    { id: 'Nakshbhai', name: 'Nakshbhai' }
+                                  ] 
+                                }
                               ]
                             },
                             {
